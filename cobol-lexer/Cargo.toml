@@ -1,0 +1,24 @@
+[package]
+name = "cobol-lexer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/MarsZDF/cobalt"
+description = "A fast, modular lexer for COBOL source code supporting both fixed-format and free-format"
+keywords = ["cobol", "lexer", "tokenizer", "parser", "compiler"]
+categories = ["parsing", "development-tools"]
+
+[dependencies]
+# No external dependencies for now - pure Rust implementation
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "lexer_bench"
+harness = false
+
+[lib]
+name = "cobol_lexer"
+path = "src/lib.rs"
