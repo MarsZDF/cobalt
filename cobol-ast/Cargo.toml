@@ -1,0 +1,25 @@
+[package]
+name = "cobol-ast"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/MarsZDF/cobalt"
+description = "Abstract Syntax Tree (AST) data structures for COBOL programs"
+keywords = ["cobol", "ast", "parser", "compiler"]
+categories = ["parsing", "development-tools"]
+
+[dependencies]
+# Dependencies for serialization (optional, but useful)
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+[dev-dependencies]
+# For testing
+
+[features]
+default = []
+serialize = ["serde"]
+
+[lib]
+name = "cobol_ast"
+path = "src/lib.rs"
