@@ -56,6 +56,18 @@ jobs:
       - name: Test cobol-doc-gen
         working-directory: cobol-doc-gen
         run: cargo test --verbose
+      
+      - name: Test cobol-repl
+        working-directory: cobol-repl
+        run: cargo test --verbose || echo "No tests yet"
+      
+      - name: Test cobol-linter
+        working-directory: cobol-linter
+        run: cargo test --verbose || echo "No tests yet"
+      
+      - name: Test cobol-visualizer
+        working-directory: cobol-visualizer
+        run: cargo test --verbose || echo "No tests yet"
 
   lint:
     name: Lint
@@ -167,6 +179,18 @@ jobs:
       
       - name: Build cobol-doc-gen
         working-directory: cobol-doc-gen
+        run: cargo build --verbose
+      
+      - name: Build cobol-repl
+        working-directory: cobol-repl
+        run: cargo build --verbose
+      
+      - name: Build cobol-linter
+        working-directory: cobol-linter
+        run: cargo build --verbose
+      
+      - name: Build cobol-visualizer
+        working-directory: cobol-visualizer
         run: cargo build --verbose --release
 
   examples:

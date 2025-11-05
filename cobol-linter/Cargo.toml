@@ -1,0 +1,16 @@
+[package]
+name = "cobol-linter"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+description = "Static analysis linter for COBOL code"
+
+[dependencies]
+cobol-lexer = { path = "../cobol-lexer" }
+cobol-parser = { path = "../cobol-parser" }
+cobol-ast = { path = "../cobol-ast" }
+clap = { workspace = true }
+anyhow = { workspace = true }
+serde_json = "1.0"

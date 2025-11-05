@@ -86,7 +86,7 @@ PROCEDURE DIVISION.
     COMPUTE Z = X * Y - 5.
     STOP RUN.
 "#;
-    
+
     let result = parse_source(source, Format::FreeFormat);
     assert!(result.is_ok(), "Parsing failed: {:?}", result.err());
 }
@@ -108,7 +108,7 @@ PROCEDURE DIVISION.
     END-IF.
     STOP RUN.
 "#;
-    
+
     let result = parse_source(source, Format::FreeFormat);
     assert!(result.is_ok(), "Parsing failed: {:?}", result.err());
 }
@@ -132,7 +132,7 @@ PROCEDURE DIVISION.
     END-PERFORM.
     STOP RUN.
 "#;
-    
+
     let result = parse_source(source, Format::FreeFormat);
     assert!(result.is_ok(), "Parsing failed: {:?}", result.err());
 }
@@ -162,7 +162,7 @@ PROCEDURE DIVISION.
     CLOSE OUTPUT-FILE.
     STOP RUN.
 "#;
-    
+
     let result = parse_source(source, Format::FreeFormat);
     // File operations might not be fully implemented, so we just check it doesn't crash
     let _ = result;
@@ -190,7 +190,7 @@ WORKING-STORAGE SECTION.
 PROCEDURE DIVISION.
     STOP RUN.
 "#;
-    
+
     let result = parse_source(source, Format::FreeFormat);
     assert!(result.is_ok(), "Parsing failed: {:?}", result.err());
 }
@@ -214,7 +214,7 @@ PROCEDURE DIVISION.
              INTO SOURCE-1 SOURCE-2.
     STOP RUN.
 "#;
-    
+
     let result = parse_source(source, Format::FreeFormat);
     // String operations might not be fully implemented
     let _ = result;
@@ -240,7 +240,7 @@ PROCEDURE DIVISION.
     END-EVALUATE.
     STOP RUN.
 "#;
-    
+
     let result = parse_source(source, Format::FreeFormat);
     // Evaluate might not be fully implemented
     let _ = result;

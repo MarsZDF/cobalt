@@ -1,11 +1,11 @@
-use cobol_ast::{Span, Spanned};
+use crate::error::{ParseError, ParseResult};
+use cobol_ast::data::*;
+use cobol_ast::expression::*;
+use cobol_ast::literal::*;
 use cobol_ast::program::*;
 use cobol_ast::statement::*;
-use cobol_ast::expression::*;
-use cobol_ast::data::*;
-use cobol_ast::literal::*;
+use cobol_ast::{Span, Spanned};
 use cobol_lexer::{Token, TokenType};
-use crate::error::{ParseError, ParseResult};
 
 /// Recursive descent parser for COBOL.
 pub struct Parser {
@@ -16,10 +16,7 @@ pub struct Parser {
 impl Parser {
     /// Create a new parser from tokens.
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self {
-            tokens,
-            current: 0,
-        }
+        Self { tokens, current: 0 }
     }
 
     /// Parse a complete COBOL program.
@@ -59,7 +56,7 @@ impl Parser {
         let mut program_id = None;
 
         // Parse PROGRAM-ID if present
-        if self.check_token(TokenType::ProgramId) {
+        if self.check_token(&TokenType::ProgramId) {
             self.advance(); // consume PROGRAM-ID
             self.consume_token(TokenType::Period)?; // consume the period after PROGRAM-ID
             if let Some(token) = self.advance() {
@@ -72,9 +69,9 @@ impl Parser {
 
         // Skip to next division (simplified - would parse other entries)
         while !self.is_at_end()
-            && !self.check_token(TokenType::Environment)
-            && !self.check_token(TokenType::Data)
-            && !self.check_token(TokenType::Procedure)
+            && !self.check_token(&TokenType::Environment)
+            && !self.check_token(&TokenType::Data)
+            && !self.check_token(&TokenType::Procedure)
         {
             self.advance();
         }
@@ -98,7 +95,7 @@ impl Parser {
     fn optional_parse_environment_division(
         &mut self,
     ) -> ParseResult<Option<Spanned<EnvironmentDivision>>> {
-        if !self.check_token(TokenType::Environment) {
+        if !self.check_token(&TokenType::Environment) {
             return Ok(None);
         }
 
@@ -108,8 +105,8 @@ impl Parser {
 
         // Skip to next division (simplified)
         while !self.is_at_end()
-            && !self.check_token(TokenType::Data)
-            && !self.check_token(TokenType::Procedure)
+            && !self.check_token(&TokenType::Data)
+            && !self.check_token(&TokenType::Procedure)
         {
             self.advance();
         }
@@ -126,7 +123,7 @@ impl Parser {
 
     /// Optionally parse DATA DIVISION.
     fn optional_parse_data_division(&mut self) -> ParseResult<Option<Spanned<DataDivision>>> {
-        if !self.check_token(TokenType::Data) {
+        if !self.check_token(&TokenType::Data) {
             return Ok(None);
         }
 
@@ -137,7 +134,7 @@ impl Parser {
         let mut working_storage = None;
 
         // Parse WORKING-STORAGE SECTION if present
-        if self.check_token(TokenType::WorkingStorage) {
+        if self.check_token(&TokenType::WorkingStorage) {
             let ws_start = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
                 expected: vec!["WORKING-STORAGE".to_string()],
             })?;
@@ -146,7 +143,7 @@ impl Parser {
 
             let mut data_items = Vec::new();
             // Parse data items until PROCEDURE DIVISION
-            while !self.is_at_end() && !self.check_token(TokenType::Procedure) {
+            while !self.is_at_end() && !self.check_token(&TokenType::Procedure) {
                 if self.check_level_number() {
                     if let Ok(item) = self.parse_data_item() {
                         data_items.push(item);
@@ -159,14 +156,11 @@ impl Parser {
             }
 
             let ws_span = self.create_span(&ws_start, self.previous_token().unwrap_or(&ws_start));
-            working_storage = Some(Spanned::new(
-                WorkingStorageSection { data_items },
-                ws_span,
-            ));
+            working_storage = Some(Spanned::new(WorkingStorageSection { data_items }, ws_span));
         }
 
         // Skip to PROCEDURE DIVISION
-        while !self.is_at_end() && !self.check_token(TokenType::Procedure) {
+        while !self.is_at_end() && !self.check_token(&TokenType::Procedure) {
             self.advance();
         }
 
@@ -214,10 +208,8 @@ impl Parser {
 
     /// Parse a data item.
     fn parse_data_item(&mut self) -> ParseResult<Spanned<DataItem>> {
-        let level_token = self.advance().ok_or_else(|| {
-            ParseError::UnexpectedEof {
-                expected: vec!["level number".to_string()],
-            }
+        let level_token = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
+            expected: vec!["level number".to_string()],
         })?;
 
         let level = if let TokenType::LevelNumber(level) = level_token.token_type {
@@ -235,16 +227,17 @@ impl Parser {
             });
         };
 
-        let name_token = self.advance().ok_or_else(|| {
-            ParseError::UnexpectedEof {
-                expected: vec!["identifier".to_string()],
-            }
+        let name_token = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
+            expected: vec!["identifier".to_string()],
         })?;
 
         let name = if let TokenType::Identifier(ref name) = name_token.token_type {
             Spanned::new(name.clone(), self.create_span(&name_token, &name_token))
         } else if let TokenType::Filler = name_token.token_type {
-            Spanned::new("FILLER".to_string(), self.create_span(&name_token, &name_token))
+            Spanned::new(
+                "FILLER".to_string(),
+                self.create_span(&name_token, &name_token),
+            )
         } else {
             return Err(ParseError::UnexpectedToken {
                 expected: vec!["identifier".to_string()],
@@ -257,14 +250,14 @@ impl Parser {
         let mut value = None;
 
         while !self.is_at_end() {
-            if self.check_token(TokenType::Pic) || self.check_token(TokenType::Picture) {
+            if self.check_token(&TokenType::Pic) || self.check_token(&TokenType::Picture) {
                 let pic_start = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
                     expected: vec!["PICTURE".to_string()],
                 })?;
                 // Parse PICTURE clause - need to handle various formats like 9(5), X(10), etc.
                 let mut pic_string = String::new();
                 let mut last_token = pic_start.clone();
-                
+
                 // Continue parsing tokens until we hit VALUE, period, or other data item keywords
                 while let Some(token) = self.peek() {
                     match &token.token_type {
@@ -294,12 +287,12 @@ impl Parser {
                         _ => break,
                     }
                 }
-                
+
                 if !pic_string.is_empty() {
                     let pic_span = self.create_span(&pic_start, &last_token);
                     picture = Some(Spanned::new(Picture::new(pic_string), pic_span));
                 }
-            } else if self.check_token(TokenType::Value) {
+            } else if self.check_token(&TokenType::Value) {
                 let value_start = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
                     expected: vec!["VALUE".to_string()],
                 })?;
@@ -341,13 +334,14 @@ impl Parser {
                         }
                     }
                 }
-            } else if self.check_token(TokenType::Period) {
+            } else if self.check_token(&TokenType::Period) {
                 self.advance();
                 break;
-            } else if self.check_token(TokenType::Procedure) || 
-                      self.check_token(TokenType::Data) ||
-                      self.check_token(TokenType::Environment) ||
-                      self.check_level_number() {
+            } else if self.check_token(&TokenType::Procedure)
+                || self.check_token(&TokenType::Data)
+                || self.check_token(&TokenType::Environment)
+                || self.check_level_number()
+            {
                 // Stop parsing this data item when we hit division keywords or next level number
                 break;
             } else {
@@ -415,7 +409,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Display)?;
         let mut operands = Vec::new();
 
-        while !self.is_at_end() && !self.check_token(TokenType::Period) {
+        while !self.is_at_end() && !self.check_token(&TokenType::Period) {
             if let Some(token) = self.advance() {
                 match token.token_type {
                     TokenType::StringLiteral(ref s) => {
@@ -427,10 +421,7 @@ impl Parser {
                     }
                     TokenType::Identifier(ref id) => {
                         let span = self.create_span(&token, &token);
-                        operands.push(Spanned::new(
-                            DisplayOperand::Identifier(id.clone()),
-                            span,
-                        ));
+                        operands.push(Spanned::new(DisplayOperand::Identifier(id.clone()), span));
                     }
                     _ => break,
                 }
@@ -441,10 +432,7 @@ impl Parser {
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
 
         Ok(Spanned::new(
-            Statement::Display(Spanned::new(
-                DisplayStatement { operands },
-                span,
-            )),
+            Statement::Display(Spanned::new(DisplayStatement { operands }, span)),
             span,
         ))
     }
@@ -452,10 +440,8 @@ impl Parser {
     /// Parse ACCEPT statement.
     fn parse_accept_statement(&mut self) -> ParseResult<Spanned<Statement>> {
         let start = self.consume_token(TokenType::Accept)?;
-        let id_token = self.advance().ok_or_else(|| {
-            ParseError::UnexpectedEof {
-                expected: vec!["identifier".to_string()],
-            }
+        let id_token = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
+            expected: vec!["identifier".to_string()],
         })?;
 
         let identifier = if let TokenType::Identifier(ref id) = id_token.token_type {
@@ -533,10 +519,7 @@ impl Parser {
         Ok(Spanned::new(
             Statement::If(Spanned::new(
                 IfStatement {
-                    condition: Spanned::new(
-                        Expression::Literal(Literal::Boolean(true)),
-                        span,
-                    ),
+                    condition: Spanned::new(Expression::Literal(Literal::Boolean(true)), span),
                     then_statements: Vec::new(),
                     else_statements: None,
                 },
@@ -549,7 +532,7 @@ impl Parser {
     /// Parse STOP statement.
     fn parse_stop_statement(&mut self) -> ParseResult<Spanned<Statement>> {
         let start = self.consume_token(TokenType::Stop)?;
-        let stop_type = if self.check_token(TokenType::Run) {
+        let stop_type = if self.check_token(&TokenType::Run) {
             self.advance();
             StopStatement::Run
         } else {
@@ -621,14 +604,10 @@ impl Parser {
                 expected: vec![format!("{:?}", token_type)],
             })
         } else {
-            let found = self.peek().cloned().unwrap_or_else(|| Token::new(
-                TokenType::Eof,
-                String::new(),
-                0,
-                0,
-                0,
-                0,
-            ));
+            let found = self
+                .peek()
+                .cloned()
+                .unwrap_or_else(|| Token::new(TokenType::Eof, String::new(), 0, 0, 0, 0));
             Err(ParseError::UnexpectedToken {
                 expected: vec![format!("{:?}", token_type)],
                 found,
@@ -663,7 +642,7 @@ impl Parser {
         }
         None
     }
-    
+
     fn peek_raw(&self) -> Option<&Token> {
         self.tokens.get(self.current)
     }
@@ -721,9 +700,14 @@ impl Parser {
     fn parse_open_statement(&mut self) -> ParseResult<Spanned<Statement>> {
         let start = self.consume_token(TokenType::Open)?;
         let mut files = Vec::new();
-        
+
         // Simplified: OPEN INPUT file-name
-        if self.matches(&[TokenType::Input, TokenType::Output, TokenType::InputOutput, TokenType::Extend]) {
+        if self.matches(&[
+            TokenType::Input,
+            TokenType::Output,
+            TokenType::InputOutput,
+            TokenType::Extend,
+        ]) {
             let mode_token = self.advance().unwrap();
             let mode = match mode_token.token_type {
                 TokenType::Input => OpenMode::Input,
@@ -732,14 +716,14 @@ impl Parser {
                 TokenType::Extend => OpenMode::Extend,
                 _ => unreachable!(),
             };
-            
+
             let file_name = self.consume_identifier()?;
             files.push(OpenFile { mode, file_name });
         }
-        
+
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Open(Spanned::new(OpenStatement { files }, span)),
             span,
@@ -751,13 +735,16 @@ impl Parser {
         let file_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Close(Spanned::new(
-                CloseStatement { 
-                    files: vec![CloseFile { file_name, disposition: None }] 
-                }, 
-                span.clone()
+                CloseStatement {
+                    files: vec![CloseFile {
+                        file_name,
+                        disposition: None,
+                    }],
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -768,7 +755,7 @@ impl Parser {
         let file_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Read(Spanned::new(
                 ReadStatement {
@@ -780,8 +767,8 @@ impl Parser {
                     not_at_end: None,
                     invalid_key: None,
                     not_invalid_key: None,
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -792,7 +779,7 @@ impl Parser {
         let record_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Write(Spanned::new(
                 WriteStatement {
@@ -803,8 +790,8 @@ impl Parser {
                     not_at_eop: None,
                     invalid_key: None,
                     not_invalid_key: None,
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -815,7 +802,7 @@ impl Parser {
         let record_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Rewrite(Spanned::new(
                 RewriteStatement {
@@ -823,8 +810,8 @@ impl Parser {
                     from: None,
                     invalid_key: None,
                     not_invalid_key: None,
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -835,7 +822,7 @@ impl Parser {
         let file_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Delete(Spanned::new(
                 DeleteStatement {
@@ -843,8 +830,8 @@ impl Parser {
                     record: None,
                     invalid_key: None,
                     not_invalid_key: None,
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -856,17 +843,20 @@ impl Parser {
         // Simplified implementation
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::String(Spanned::new(
                 StringStatement {
                     sources: Vec::new(),
-                    destination: Spanned::new(Expression::Identifier("temp".to_string()), span.clone()),
+                    destination: Spanned::new(
+                        Expression::Identifier("temp".to_string()),
+                        span.clone(),
+                    ),
                     pointer: None,
                     on_overflow: None,
                     not_on_overflow: None,
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -877,7 +867,7 @@ impl Parser {
         // Simplified implementation
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Unstring(Spanned::new(
                 UnstringStatement {
@@ -888,8 +878,8 @@ impl Parser {
                     tallying: None,
                     on_overflow: None,
                     not_on_overflow: None,
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -900,7 +890,7 @@ impl Parser {
         let table_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Search(Spanned::new(
                 SearchStatement {
@@ -908,8 +898,8 @@ impl Parser {
                     varying: None,
                     at_end: None,
                     when_clauses: Vec::new(),
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -920,7 +910,7 @@ impl Parser {
         let file_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Sort(Spanned::new(
                 SortStatement {
@@ -930,8 +920,8 @@ impl Parser {
                     using_files: Vec::new(),
                     output_procedure: None,
                     giving_files: Vec::new(),
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -942,15 +932,15 @@ impl Parser {
         // Simplified implementation
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Evaluate(Spanned::new(
                 EvaluateStatement {
                     selection_subjects: Vec::new(),
                     when_clauses: Vec::new(),
                     when_other: None,
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -961,11 +951,14 @@ impl Parser {
         let paragraph = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Perform(Box::new(Spanned::new(
-                PerformStatement::Simple { paragraph, through: None },
-                span.clone()
+                PerformStatement::Simple {
+                    paragraph,
+                    through: None,
+                },
+                span.clone(),
             ))),
             span,
         ))
@@ -976,15 +969,15 @@ impl Parser {
         let program_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
         let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
-        
+
         Ok(Spanned::new(
             Statement::Call(Spanned::new(
                 CallStatement {
                     program_name,
                     using: None,
                     returning: None,
-                }, 
-                span.clone()
+                },
+                span.clone(),
             )),
             span,
         ))
@@ -994,7 +987,7 @@ impl Parser {
         let token = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
             expected: vec!["identifier".to_string()],
         })?;
-        
+
         match token.token_type {
             TokenType::Identifier(name) => Ok(name),
             _ => Err(ParseError::UnexpectedToken {

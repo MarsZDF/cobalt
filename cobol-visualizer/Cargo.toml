@@ -1,0 +1,15 @@
+[package]
+name = "cobol-visualizer"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+
+[dependencies]
+cobol-lexer = { path = "../cobol-lexer" }
+cobol-parser = { path = "../cobol-parser" }
+cobol-ast = { path = "../cobol-ast" }
+clap = { workspace = true }
+svg = { workspace = true }
+anyhow = { workspace = true }

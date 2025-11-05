@@ -1,6 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use cobol_lexer::Format;
 use cobol_parser::parse_source;
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn bench_small_program(c: &mut Criterion) {
     let source = r#"
@@ -10,7 +10,7 @@ PROCEDURE DIVISION.
     DISPLAY "Hello, World!".
     STOP RUN.
 "#;
-    
+
     c.bench_function("parse small program", |b| {
         b.iter(|| parse_source(black_box(source), Format::FreeFormat))
     });
@@ -33,7 +33,7 @@ PROCEDURE DIVISION.
     DISPLAY "Result: " RESULT.
     STOP RUN.
 "#;
-    
+
     c.bench_function("parse medium program", |b| {
         b.iter(|| parse_source(black_box(source), Format::FreeFormat))
     });
@@ -55,7 +55,7 @@ WORKING-STORAGE SECTION.
 PROCEDURE DIVISION.
     STOP RUN.
 "#;
-    
+
     c.bench_function("parse data division", |b| {
         b.iter(|| parse_source(black_box(source), Format::FreeFormat))
     });
@@ -84,12 +84,17 @@ PROCEDURE DIVISION.
     END-PERFORM.
     STOP RUN.
 "#;
-    
+
     c.bench_function("parse statements", |b| {
         b.iter(|| parse_source(black_box(source), Format::FreeFormat))
     });
 }
 
-criterion_group!(benches, bench_small_program, bench_medium_program, bench_data_division, bench_statements);
+criterion_group!(
+    benches,
+    bench_small_program,
+    bench_medium_program,
+    bench_data_division,
+    bench_statements
+);
 criterion_main!(benches);
-

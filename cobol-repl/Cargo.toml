@@ -1,0 +1,15 @@
+[package]
+name = "cobol-repl"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+description = "Interactive REPL for exploring COBOL code"
+
+[dependencies]
+cobol-lexer = { path = "../cobol-lexer" }
+cobol-parser = { path = "../cobol-parser" }
+cobol-ast = { path = "../cobol-ast" }
+rustyline = { workspace = true }
+anyhow = { workspace = true }
