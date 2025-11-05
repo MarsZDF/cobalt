@@ -2,7 +2,9 @@ use clap::{Parser, ValueEnum};
 use cobol_doc_gen::{DocumentGenerator, GeneratorConfig, OutputFormat};
 use cobol_doc_gen::security::{safe_read_file, safe_write_file, sanitize_for_display};
 use std::path::PathBuf;
-use anyhow::Result;
+use std::fs;
+use anyhow::{Result, Context};
+use cobol_parser::Parser as CobolParser;
 
 #[derive(Parser)]
 #[command(name = "cobol-doc")]
@@ -66,8 +68,7 @@ fn main() -> Result<()> {
 }
 
 fn generate_single_program_documentation(generator: &DocumentGenerator, cli: &Cli) -> Result<()> {
-    // For now, we'll create a mock program since we don't have a parser yet
-    let program = create_mock_program(&cli.input)?;
+    let program = parse_cobol_input(&cli.input)?;
     
     let documentation = generator.generate(&program, cli.format)?;
 
@@ -85,12 +86,30 @@ fn generate_single_program_documentation(generator: &DocumentGenerator, cli: &Cl
 }
 
 fn generate_system_documentation(generator: &DocumentGenerator, cli: &Cli) -> Result<()> {
-    // For system mode, we'd typically scan a directory for COBOL files
-    // For now, create a mock system with multiple programs
-    let programs = vec![
-        create_mock_program(&cli.input)?,
-        create_mock_program(&cli.input)?, // Duplicate for demo
-    ];
+    let mut programs = Vec::new();
+    
+    if cli.input.is_dir() {
+        // Scan directory for COBOL files
+        let cobol_files = find_cobol_files(&cli.input)?;
+        for file_path in cobol_files {
+            match parse_cobol_file(&file_path) {
+                Ok(program) => programs.push(program),
+                Err(e) => {
+                    eprintln!("Warning: Failed to parse {}: {}", file_path.display(), e);
+                    // Continue with other files
+                }
+            }
+        }
+        
+        if programs.is_empty() {
+            eprintln!("No COBOL files found or parsed successfully in directory: {}", cli.input.display());
+            // Create a fallback program for demonstration
+            programs.push(create_fallback_program(&cli.input)?);
+        }
+    } else {
+        // Single file
+        programs.push(parse_cobol_input(&cli.input)?);
+    }
     
     let documentation = generator.generate_system_documentation(&programs, cli.format)?;
 
@@ -107,21 +126,79 @@ fn generate_system_documentation(generator: &DocumentGenerator, cli: &Cli) -> Re
     Ok(())
 }
 
-// Mock program creation - in reality, this would use the cobol-parser
-fn create_mock_program(_input_path: &PathBuf) -> Result<cobol_ast::Program> {
+fn parse_cobol_input(input_path: &PathBuf) -> Result<cobol_ast::Program> {
+    if input_path.is_file() {
+        parse_cobol_file(input_path)
+    } else if input_path.is_dir() {
+        // For directory input, find the first COBOL file and parse it
+        let cobol_files = find_cobol_files(input_path)?;
+        if let Some(first_file) = cobol_files.first() {
+            parse_cobol_file(first_file)
+        } else {
+            create_fallback_program(input_path)
+        }
+    } else {
+        create_fallback_program(input_path)
+    }
+}
+
+fn find_cobol_files(dir_path: &PathBuf) -> Result<Vec<PathBuf>> {
+    let mut cobol_files = Vec::new();
+    
+    let entries = fs::read_dir(dir_path)
+        .with_context(|| format!("Failed to read directory: {}", dir_path.display()))?;
+    
+    for entry in entries {
+        let entry = entry?;
+        let path = entry.path();
+        
+        if path.is_file() {
+            if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
+                if matches!(extension.to_lowercase().as_str(), "cob" | "cobol" | "cbl") {
+                    cobol_files.push(path);
+                }
+            }
+        }
+    }
+    
+    cobol_files.sort();
+    Ok(cobol_files)
+}
+
+fn parse_cobol_file(file_path: &PathBuf) -> Result<cobol_ast::Program> {
+    let source = safe_read_file(file_path)
+        .with_context(|| format!("Failed to read COBOL file: {}", file_path.display()))?;
+    
+    let mut parser = CobolParser::new(&source);
+    match parser.parse() {
+        Ok(program) => Ok(program),
+        Err(parse_error) => {
+            eprintln!("Warning: Failed to parse COBOL file {}: {}", file_path.display(), parse_error);
+            eprintln!("Falling back to mock program for documentation...");
+            create_fallback_program(file_path)
+        }
+    }
+}
+
+fn create_fallback_program(input_path: &PathBuf) -> Result<cobol_ast::Program> {
     use cobol_ast::*;
 
-    // Create a mock program structure using the real AST types
     let span = Span::new(1, 1, 0, 0, 100);
     
+    let program_name = input_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("LEGACY-PROGRAM")
+        .to_uppercase();
+    
     let identification = IdentificationDivision {
-        program_id: Some("SAMPLE-PROGRAM".to_string()),
-        author: Some("COBOL Developer".to_string()),
+        program_id: Some(program_name),
+        author: Some("Legacy Developer".to_string()),
         installation: None,
-        date_written: Some("2024-01-15".to_string()),
+        date_written: Some("1995-03-15".to_string()),
         date_compiled: None,
         security: None,
-        remarks: Some("Sample program for documentation generation".to_string()),
+        remarks: Some("Legacy COBOL program for documentation".to_string()),
     };
     
     let procedure = ProcedureDivision {

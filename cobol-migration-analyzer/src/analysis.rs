@@ -275,7 +275,7 @@ impl MigrationAnalyzer {
 
             if program_debt > 70.0 {
                 hotspots.push(TechnicalDebtHotspot {
-                    program_name: program.program_id.clone().unwrap_or_else(|| "UNKNOWN".to_string()),
+                    program_name: program.identification.node.program_id.clone().unwrap_or_else(|| "UNKNOWN".to_string()),
                     debt_score: program_debt,
                     issues: self.identify_debt_issues(program),
                     refactoring_priority: self.determine_refactoring_priority(program_debt),
@@ -317,8 +317,22 @@ impl MigrationAnalyzer {
         })
     }
 
-    // Helper methods (simplified implementations)
-    fn estimate_lines_of_code(&self, _program: &Program) -> usize { 1000 }
+    // Helper methods (improved implementations using AST data)
+    fn estimate_lines_of_code(&self, program: &Program) -> usize {
+        // Count statements in the procedure division as a proxy for LOC
+        let mut lines = 10; // Base lines for divisions
+        
+        if let Some(env) = &program.environment {
+            lines += 5; // Environment division
+        }
+        
+        if let Some(data) = &program.data {
+            lines += 20; // Data division
+        }
+        
+        lines += program.procedure.node.statements.len() * 2; // Estimate 2 lines per statement
+        lines
+    }
     
     fn identify_programming_patterns(&self, _programs: &[&Program]) -> Result<Vec<ProgrammingPattern>> {
         Ok(vec![
@@ -436,10 +450,60 @@ impl MigrationAnalyzer {
         Ok(Vec::new())
     }
 
-    fn calculate_program_debt_score(&self, _program: &Program) -> f64 { 50.0 }
+    fn calculate_program_debt_score(&self, program: &Program) -> f64 {
+        let mut debt_score = 0.0;
+        
+        // Check for program metadata completeness
+        let id_div = &program.identification.node;
+        if id_div.author.is_none() { debt_score += 10.0; }
+        if id_div.date_written.is_none() { debt_score += 5.0; }
+        if id_div.remarks.is_none() { debt_score += 5.0; }
+        
+        // Check for missing divisions
+        if program.environment.is_none() { debt_score += 15.0; }
+        if program.data.is_none() { debt_score += 20.0; }
+        
+        // Check complexity based on statement count
+        let statement_count = program.procedure.node.statements.len();
+        if statement_count > 100 { debt_score += 20.0; }
+        else if statement_count > 50 { debt_score += 10.0; }
+        
+        // Check for empty procedure division
+        if statement_count == 0 { debt_score += 25.0; }
+        
+        debt_score.min(100.0)
+    }
     
-    fn identify_debt_issues(&self, _program: &Program) -> Vec<String> {
-        vec!["High cyclomatic complexity".to_string(), "Missing error handling".to_string()]
+    fn identify_debt_issues(&self, program: &Program) -> Vec<String> {
+        let mut issues = Vec::new();
+        
+        let id_div = &program.identification.node;
+        if id_div.author.is_none() {
+            issues.push("Missing author information".to_string());
+        }
+        if id_div.date_written.is_none() {
+            issues.push("Missing date written".to_string());
+        }
+        if id_div.remarks.is_none() {
+            issues.push("Missing program documentation".to_string());
+        }
+        
+        if program.environment.is_none() {
+            issues.push("Missing environment division".to_string());
+        }
+        if program.data.is_none() {
+            issues.push("Missing data division".to_string());
+        }
+        
+        let statement_count = program.procedure.node.statements.len();
+        if statement_count > 100 {
+            issues.push("High complexity - too many statements".to_string());
+        }
+        if statement_count == 0 {
+            issues.push("Empty procedure division".to_string());
+        }
+        
+        issues
     }
     
     fn determine_refactoring_priority(&self, debt_score: f64) -> Priority {
