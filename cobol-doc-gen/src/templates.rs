@@ -13,14 +13,18 @@ impl TemplateEngine {
         let mut handlebars = Handlebars::new();
         
         // Register built-in templates
-        handlebars.register_template_string("program.html", PROGRAM_HTML_TEMPLATE)
-            .expect("Failed to register HTML template");
-        handlebars.register_template_string("program.md", PROGRAM_MARKDOWN_TEMPLATE)
-            .expect("Failed to register Markdown template");
-        handlebars.register_template_string("system.html", SYSTEM_HTML_TEMPLATE)
-            .expect("Failed to register system HTML template");
-        handlebars.register_template_string("system.md", SYSTEM_MARKDOWN_TEMPLATE)
-            .expect("Failed to register system Markdown template");
+        if let Err(e) = handlebars.register_template_string("program.html", PROGRAM_HTML_TEMPLATE) {
+            eprintln!("Warning: Failed to register HTML template: {}", e);
+        }
+        if let Err(e) = handlebars.register_template_string("program.md", PROGRAM_MARKDOWN_TEMPLATE) {
+            eprintln!("Warning: Failed to register Markdown template: {}", e);
+        }
+        if let Err(e) = handlebars.register_template_string("system.html", SYSTEM_HTML_TEMPLATE) {
+            eprintln!("Warning: Failed to register system HTML template: {}", e);
+        }
+        if let Err(e) = handlebars.register_template_string("system.md", SYSTEM_MARKDOWN_TEMPLATE) {
+            eprintln!("Warning: Failed to register system Markdown template: {}", e);
+        }
 
         // Register custom helpers
         handlebars.register_helper("format_complexity", Box::new(format_complexity_helper));

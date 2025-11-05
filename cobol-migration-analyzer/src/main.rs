@@ -1,7 +1,7 @@
 use clap::{Parser, ValueEnum};
 use cobol_migration_analyzer::{MigrationAnalyzer, AnalysisConfig};
 use cobol_migration_analyzer::analysis::{CloudPlatform, MigrationStrategy, BusinessPriority};
-use std::fs;
+use cobol_migration_analyzer::security::safe_write_file;
 use std::path::PathBuf;
 use anyhow::Result;
 
@@ -141,23 +141,31 @@ fn main() -> Result<()> {
 }
 
 fn create_mock_program(_input_path: &PathBuf) -> Result<cobol_ast::Program> {
-    // Create a mock program structure for demonstration
-    // In reality, this would use the cobol-parser to parse the COBOL file
-    Ok(cobol_ast::Program {
+    use cobol_ast::*;
+    
+    // Create a mock program structure using the real AST types
+    let span = Span::new(1, 1, 0, 0, 100);
+    
+    let identification = IdentificationDivision {
         program_id: Some("SAMPLE-LEGACY-PROGRAM".to_string()),
         author: Some("Legacy Developer".to_string()),
+        installation: None,
         date_written: Some("1995-03-15".to_string()),
+        date_compiled: None,
+        security: None,
         remarks: Some("Customer management and order processing system".to_string()),
-        identification_division: None,
-        environment_division: None,
-        data_division: Some(cobol_ast::DataDivision {
-            working_storage: Vec::new(),
-            file_section: Vec::new(),
-            linkage_section: Vec::new(),
-        }),
-        procedure_division: Some(cobol_ast::ProcedureDivision {
-            statements: Vec::new(),
-        }),
+    };
+    
+    let procedure = ProcedureDivision {
+        using: None,
+        statements: Vec::new(),
+    };
+
+    Ok(Program {
+        identification: Spanned::new(identification, span),
+        environment: None,
+        data: None,
+        procedure: Spanned::new(procedure, span),
     })
 }
 
@@ -298,7 +306,7 @@ fn generate_text_report(assessment: &cobol_migration_analyzer::MigrationAssessme
 fn output_result(output_path: &Option<PathBuf>, content: &str) -> Result<()> {
     match output_path {
         Some(path) => {
-            fs::write(path, content)?;
+            safe_write_file(path, content)?;
             println!("Report written to {}", path.display());
         }
         None => {
@@ -308,31 +316,3 @@ fn output_result(output_path: &Option<PathBuf>, content: &str) -> Result<()> {
     Ok(())
 }
 
-// Add this to support the mock
-mod cobol_ast {
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct Program {
-        pub program_id: Option<String>,
-        pub author: Option<String>,
-        pub date_written: Option<String>,
-        pub remarks: Option<String>,
-        pub identification_division: Option<()>,
-        pub environment_division: Option<()>,
-        pub data_division: Option<DataDivision>,
-        pub procedure_division: Option<ProcedureDivision>,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct DataDivision {
-        pub working_storage: Vec<()>,
-        pub file_section: Vec<()>,
-        pub linkage_section: Vec<()>,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct ProcedureDivision {
-        pub statements: Vec<()>,
-    }
-}

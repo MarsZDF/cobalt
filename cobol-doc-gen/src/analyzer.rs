@@ -76,13 +76,14 @@ impl CobolAnalyzer {
 
     fn extract_program_summary(&self, program: &Program) -> Result<ProgramSummary> {
         // Extract from identification division
+        let identification = &program.identification.node;
         Ok(ProgramSummary {
-            program_id: program.program_id.clone().unwrap_or_else(|| "UNKNOWN".to_string()),
-            author: program.author.clone(),
-            date_written: program.date_written.clone(),
-            date_compiled: None, // Not typically in AST
+            program_id: identification.program_id.clone().unwrap_or_else(|| "UNKNOWN".to_string()),
+            author: identification.author.clone(),
+            date_written: identification.date_written.clone(),
+            date_compiled: identification.date_compiled.clone(),
             purpose: self.infer_program_purpose(program),
-            remarks: program.remarks.clone(),
+            remarks: identification.remarks.clone(),
             total_lines: self.count_lines(program),
             divisions: self.extract_divisions(program),
             called_programs: self.extract_called_programs(program),
@@ -94,17 +95,25 @@ impl CobolAnalyzer {
     fn extract_data_structures(&self, program: &Program) -> Result<Vec<DataStructure>> {
         let mut structures = Vec::new();
         
-        if let Some(ref data_division) = program.data_division {
-            for item in &data_division.working_storage {
-                structures.push(self.convert_data_item(item)?);
+        if let Some(ref data_division) = program.data {
+            if let Some(ref working_storage) = data_division.node.working_storage_section {
+                for item in &working_storage.node.data_items {
+                    structures.push(self.convert_data_item(&item.node)?);
+                }
             }
             
-            for item in &data_division.file_section {
-                structures.push(self.convert_data_item(item)?);
+            if let Some(ref file_section) = data_division.node.file_section {
+                for file_desc in &file_section.node.file_descriptions {
+                    for item in &file_desc.node.data_items {
+                        structures.push(self.convert_data_item(&item.node)?);
+                    }
+                }
             }
             
-            for item in &data_division.linkage_section {
-                structures.push(self.convert_data_item(item)?);
+            if let Some(ref linkage_section) = data_division.node.linkage_section {
+                for item in &linkage_section.node.data_items {
+                    structures.push(self.convert_data_item(&item.node)?);
+                }
             }
         }
         
@@ -140,11 +149,9 @@ impl CobolAnalyzer {
         let mut rules = Vec::new();
         let mut rule_counter = 1;
 
-        if let Some(ref procedure_division) = program.procedure_division {
-            for statement in &procedure_division.statements {
-                if let Some(rule) = self.extract_rule_from_statement(&statement.node, &mut rule_counter)? {
-                    rules.push(rule);
-                }
+        for statement in &program.procedure.node.statements {
+            if let Some(rule) = self.extract_rule_from_statement(&statement.node, &mut rule_counter)? {
+                rules.push(rule);
             }
         }
 
@@ -198,20 +205,18 @@ impl CobolAnalyzer {
     fn extract_procedure_flow(&self, program: &Program) -> Result<Vec<ProcedureBlock>> {
         let mut blocks = Vec::new();
 
-        if let Some(ref procedure_division) = program.procedure_division {
-            // Extract paragraphs and sections
-            for statement in &procedure_division.statements {
-                if let Statement::Paragraph(para) = &statement.node {
-                    blocks.push(ProcedureBlock {
-                        name: para.node.name.clone(),
-                        block_type: ProcedureBlockType::Paragraph,
-                        purpose: self.infer_paragraph_purpose(&para.node.name),
-                        statements: Vec::new(), // TODO: Collect statements in this paragraph
-                        calls_to: Vec::new(),   // TODO: Analyze PERFORM statements
-                        called_by: Vec::new(),  // TODO: Reverse reference
-                        cyclomatic_complexity: 1, // TODO: Calculate properly
-                    });
-                }
+        // Extract paragraphs and sections
+        for statement in &program.procedure.node.statements {
+            if let Statement::Paragraph(para) = &statement.node {
+                blocks.push(ProcedureBlock {
+                    name: para.node.name.clone(),
+                    block_type: ProcedureBlockType::Paragraph,
+                    purpose: self.infer_paragraph_purpose(&para.node.name),
+                    statements: Vec::new(), // TODO: Collect statements in this paragraph
+                    calls_to: Vec::new(),   // TODO: Analyze PERFORM statements
+                    called_by: Vec::new(),  // TODO: Reverse reference
+                    cyclomatic_complexity: 1, // TODO: Calculate properly
+                });
             }
         }
 
@@ -240,26 +245,22 @@ impl CobolAnalyzer {
     // Helper methods for inference and calculation
     fn infer_program_purpose(&self, program: &Program) -> Option<String> {
         // Basic heuristics based on program structure and statements
-        if let Some(ref proc_div) = program.procedure_division {
-            let has_file_operations = proc_div.statements.iter().any(|s| {
-                matches!(s.node, Statement::Return(_))
-            });
-            
-            let has_calculations = proc_div.statements.iter().any(|s| {
-                matches!(s.node, Statement::Compute(_))
-            });
+        let has_file_operations = program.procedure.node.statements.iter().any(|s| {
+            matches!(s.node, Statement::Return(_))
+        });
+        
+        let has_calculations = program.procedure.node.statements.iter().any(|s| {
+            matches!(s.node, Statement::Compute(_))
+        });
 
-            if has_file_operations && has_calculations {
-                Some("Data processing and calculation program".to_string())
-            } else if has_file_operations {
-                Some("File processing program".to_string())
-            } else if has_calculations {
-                Some("Calculation program".to_string())
-            } else {
-                Some("General purpose program".to_string())
-            }
+        if has_file_operations && has_calculations {
+            Some("Data processing and calculation program".to_string())
+        } else if has_file_operations {
+            Some("File processing program".to_string())
+        } else if has_calculations {
+            Some("Calculation program".to_string())
         } else {
-            None
+            Some("General purpose program".to_string())
         }
     }
 

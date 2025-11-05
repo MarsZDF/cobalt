@@ -28,6 +28,7 @@ pub mod cloud_readiness;
 pub mod effort_estimation;
 pub mod recommendations;
 pub mod models;
+pub mod security;
 
 pub use analysis::{MigrationAnalyzer, AnalysisConfig};
 pub use assessment::MigrationAssessment;

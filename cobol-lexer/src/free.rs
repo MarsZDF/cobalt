@@ -236,7 +236,10 @@ impl<'a> FreeFormatLexer<'a> {
             match ch {
                 '\\' if self.peek_char() == Some('"') || self.peek_char() == Some('\'') => {
                     // Escaped quote
-                    let escaped = self.next_char().unwrap();
+                    let escaped = match self.next_char() {
+                        Some(ch) => ch,
+                        None => return Err(LexError::UnterminatedString { line: self.line, column: self.column }),
+                    };
                     value.push(escaped);
                     lexeme.push('\\');
                     lexeme.push(escaped);

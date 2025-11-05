@@ -137,7 +137,9 @@ impl Parser {
 
         // Parse WORKING-STORAGE SECTION if present
         if self.check_token(TokenType::WorkingStorage) {
-            let ws_start = self.advance().unwrap();
+            let ws_start = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
+                message: "Expected WORKING-STORAGE token".to_string(),
+            })?;
             self.consume_token(TokenType::Section)?;
             self.consume_token(TokenType::Period)?;
 
@@ -255,7 +257,9 @@ impl Parser {
 
         while !self.is_at_end() {
             if self.check_token(TokenType::Pic) || self.check_token(TokenType::Picture) {
-                let pic_start = self.advance().unwrap();
+                let pic_start = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
+                    message: "Expected PICTURE token".to_string(),
+                })?;
                 // Simplified - would parse PICTURE string
                 if let Some(pic_token) = self.advance() {
                     if let TokenType::StringLiteral(ref pic_str) = pic_token.token_type {
@@ -264,7 +268,9 @@ impl Parser {
                     }
                 }
             } else if self.check_token(TokenType::Value) {
-                let value_start = self.advance().unwrap();
+                let value_start = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
+                    message: "Expected VALUE token".to_string(),
+                })?;
                 // Simplified - would parse VALUE clause
                 if let Some(value_token) = self.advance() {
                     if let TokenType::StringLiteral(ref lit) = value_token.token_type {
@@ -528,7 +534,9 @@ impl Parser {
 
     fn consume_token(&mut self, token_type: TokenType) -> ParseResult<Token> {
         if self.check_token(token_type) {
-            Ok(self.advance().unwrap())
+            self.advance().ok_or_else(|| ParseError::UnexpectedEof {
+                message: format!("Expected {:?} token", token_type),
+            })
         } else {
             let found = self.peek().cloned().unwrap_or_else(|| Token::new(
                 TokenType::Eof,

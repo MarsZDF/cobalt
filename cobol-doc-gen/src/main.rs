@@ -1,6 +1,6 @@
 use clap::{Parser, ValueEnum};
 use cobol_doc_gen::{DocumentGenerator, GeneratorConfig, OutputFormat};
-use std::fs;
+use cobol_doc_gen::security::{safe_read_file, safe_write_file, sanitize_for_display};
 use std::path::PathBuf;
 use anyhow::Result;
 
@@ -73,7 +73,7 @@ fn generate_single_program_documentation(generator: &DocumentGenerator, cli: &Cl
 
     match &cli.output {
         Some(output_path) => {
-            fs::write(output_path, documentation)?;
+            safe_write_file(output_path, &documentation)?;
             println!("Documentation written to {}", output_path.display());
         }
         None => {
@@ -96,7 +96,7 @@ fn generate_system_documentation(generator: &DocumentGenerator, cli: &Cli) -> Re
 
     match &cli.output {
         Some(output_path) => {
-            fs::write(output_path, documentation)?;
+            safe_write_file(output_path, &documentation)?;
             println!("System documentation written to {}", output_path.display());
         }
         None => {
@@ -111,45 +111,28 @@ fn generate_system_documentation(generator: &DocumentGenerator, cli: &Cli) -> Re
 fn create_mock_program(_input_path: &PathBuf) -> Result<cobol_ast::Program> {
     use cobol_ast::*;
 
-    // Create a mock program structure
-    // This is just for demonstration - real implementation would parse the COBOL file
-    Ok(Program {
+    // Create a mock program structure using the real AST types
+    let span = Span::new(1, 1, 0, 0, 100);
+    
+    let identification = IdentificationDivision {
         program_id: Some("SAMPLE-PROGRAM".to_string()),
         author: Some("COBOL Developer".to_string()),
+        installation: None,
         date_written: Some("2024-01-15".to_string()),
+        date_compiled: None,
+        security: None,
         remarks: Some("Sample program for documentation generation".to_string()),
-        identification_division: None,
-        environment_division: None,
-        data_division: None,
-        procedure_division: None,
+    };
+    
+    let procedure = ProcedureDivision {
+        using: None,
+        statements: Vec::new(),
+    };
+
+    Ok(Program {
+        identification: Spanned::new(identification, span),
+        environment: None,
+        data: None,
+        procedure: Spanned::new(procedure, span),
     })
-}
-
-// Add this to the cobol_ast module for the mock
-mod cobol_ast {
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct Program {
-        pub program_id: Option<String>,
-        pub author: Option<String>,
-        pub date_written: Option<String>,
-        pub remarks: Option<String>,
-        pub identification_division: Option<()>,
-        pub environment_division: Option<()>,
-        pub data_division: Option<DataDivision>,
-        pub procedure_division: Option<ProcedureDivision>,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct DataDivision {
-        pub working_storage: Vec<()>,
-        pub file_section: Vec<()>,
-        pub linkage_section: Vec<()>,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct ProcedureDivision {
-        pub statements: Vec<()>,
-    }
 }

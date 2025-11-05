@@ -25,6 +25,7 @@ pub mod generator;
 pub mod templates;
 pub mod models;
 pub mod formats;
+pub mod security;
 
 pub use generator::{DocumentGenerator, GeneratorConfig};
 pub use formats::OutputFormat;
