@@ -5,7 +5,8 @@ use cobol_migration_analyzer::security::safe_write_file;
 use std::path::PathBuf;
 use std::fs;
 use anyhow::{Result, Context};
-use cobol_parser::Parser as CobolParser;
+use cobol_parser;
+use cobol_lexer;
 
 #[derive(Parser)]
 #[command(name = "cobol-migrate")]
@@ -183,9 +184,8 @@ fn parse_cobol_file(file_path: &PathBuf) -> Result<cobol_ast::Program> {
     let source = fs::read_to_string(file_path)
         .with_context(|| format!("Failed to read COBOL file: {}", file_path.display()))?;
     
-    let mut parser = CobolParser::new(&source);
-    match parser.parse() {
-        Ok(program) => Ok(program),
+    match cobol_parser::parse_source(&source, cobol_lexer::Format::FreeFormat) {
+        Ok(program) => Ok(program.node), // Extract the program from Spanned wrapper
         Err(parse_error) => {
             eprintln!("Warning: Failed to parse COBOL file {}: {}", file_path.display(), parse_error);
             eprintln!("Falling back to mock program for analysis...");

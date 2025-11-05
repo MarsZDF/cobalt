@@ -320,8 +320,25 @@ impl Parser {
             TokenType::Stop => self.parse_stop_statement(),
             TokenType::Exit => self.parse_exit_statement(),
             TokenType::Return => self.parse_return_statement(),
+            // File operations
+            TokenType::Open => self.parse_open_statement(),
+            TokenType::Close => self.parse_close_statement(),
+            TokenType::Read => self.parse_read_statement(),
+            TokenType::Write => self.parse_write_statement(),
+            TokenType::Rewrite => self.parse_rewrite_statement(),
+            TokenType::Delete => self.parse_delete_statement(),
+            // String operations
+            TokenType::StringStmt => self.parse_string_statement(),
+            TokenType::Unstring => self.parse_unstring_statement(),
+            // Table operations
+            TokenType::Search => self.parse_search_statement(),
+            TokenType::Sort => self.parse_sort_statement(),
+            // Control structures
+            TokenType::Evaluate => self.parse_evaluate_statement(),
+            TokenType::Perform => self.parse_perform_statement(),
+            TokenType::Call => self.parse_call_statement(),
             _ => Err(ParseError::UnexpectedToken {
-                expected: vec!["DISPLAY, ACCEPT, MOVE, COMPUTE, IF, STOP".to_string()],
+                expected: vec!["statement keyword".to_string()],
                 found: token.clone(),
             }),
         }
@@ -636,5 +653,300 @@ impl Parser {
             start.start,
             end.end,
         )
+    }
+
+    // File operation parsers
+    fn parse_open_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Open)?;
+        let mut files = Vec::new();
+        
+        // Simplified: OPEN INPUT file-name
+        if self.matches(&[TokenType::Input, TokenType::Output, TokenType::InputOutput, TokenType::Extend]) {
+            let mode_token = self.advance().unwrap();
+            let mode = match mode_token.token_type {
+                TokenType::Input => OpenMode::Input,
+                TokenType::Output => OpenMode::Output,
+                TokenType::InputOutput => OpenMode::InputOutput,
+                TokenType::Extend => OpenMode::Extend,
+                _ => unreachable!(),
+            };
+            
+            let file_name = self.consume_identifier()?;
+            files.push(OpenFile { mode, file_name });
+        }
+        
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Open(Spanned::new(OpenStatement { files }, span.clone())),
+            span,
+        ))
+    }
+
+    fn parse_close_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Close)?;
+        let file_name = self.consume_identifier()?;
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Close(Spanned::new(
+                CloseStatement { 
+                    files: vec![CloseFile { file_name, disposition: None }] 
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_read_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Read)?;
+        let file_name = self.consume_identifier()?;
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Read(Spanned::new(
+                ReadStatement {
+                    file_name,
+                    record_name: None,
+                    into: None,
+                    key: None,
+                    at_end: None,
+                    not_at_end: None,
+                    invalid_key: None,
+                    not_invalid_key: None,
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_write_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Write)?;
+        let record_name = self.consume_identifier()?;
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Write(Spanned::new(
+                WriteStatement {
+                    record_name,
+                    from: None,
+                    advancing: None,
+                    at_eop: None,
+                    not_at_eop: None,
+                    invalid_key: None,
+                    not_invalid_key: None,
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_rewrite_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Rewrite)?;
+        let record_name = self.consume_identifier()?;
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Rewrite(Spanned::new(
+                RewriteStatement {
+                    record_name,
+                    from: None,
+                    invalid_key: None,
+                    not_invalid_key: None,
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_delete_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Delete)?;
+        let file_name = self.consume_identifier()?;
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Delete(Spanned::new(
+                DeleteStatement {
+                    file_name,
+                    record: None,
+                    invalid_key: None,
+                    not_invalid_key: None,
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    // Placeholder implementations for other statements
+    fn parse_string_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::StringStmt)?;
+        // Simplified implementation
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::String(Spanned::new(
+                StringStatement {
+                    sources: Vec::new(),
+                    destination: Spanned::new(Expression::Identifier(Spanned::new("temp".to_string(), span.clone())), span.clone()),
+                    pointer: None,
+                    on_overflow: None,
+                    not_on_overflow: None,
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_unstring_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Unstring)?;
+        // Simplified implementation
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Unstring(Spanned::new(
+                UnstringStatement {
+                    source: Spanned::new(Expression::Identifier(Spanned::new("temp".to_string(), span.clone())), span.clone()),
+                    delimiters: Vec::new(),
+                    destinations: Vec::new(),
+                    pointer: None,
+                    tallying: None,
+                    on_overflow: None,
+                    not_on_overflow: None,
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_search_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Search)?;
+        let table_name = self.consume_identifier()?;
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Search(Spanned::new(
+                SearchStatement {
+                    table_name,
+                    varying: None,
+                    at_end: None,
+                    when_clauses: Vec::new(),
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_sort_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Sort)?;
+        let file_name = self.consume_identifier()?;
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Sort(Spanned::new(
+                SortStatement {
+                    file_name,
+                    keys: Vec::new(),
+                    input_procedure: None,
+                    using_files: Vec::new(),
+                    output_procedure: None,
+                    giving_files: Vec::new(),
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_evaluate_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Evaluate)?;
+        // Simplified implementation
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Evaluate(Spanned::new(
+                EvaluateStatement {
+                    selection_subjects: Vec::new(),
+                    when_clauses: Vec::new(),
+                    when_other: None,
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_perform_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Perform)?;
+        let paragraph = self.consume_identifier()?;
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Perform(Spanned::new(
+                PerformStatement::Simple { paragraph, through: None },
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn parse_call_statement(&mut self) -> ParseResult<Spanned<Statement>> {
+        let start = self.consume_token(TokenType::Call)?;
+        let program_name = self.consume_identifier()?;
+        self.consume_token(TokenType::Period)?;
+        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        
+        Ok(Spanned::new(
+            Statement::Call(Spanned::new(
+                CallStatement {
+                    program_name,
+                    using: None,
+                    returning: None,
+                }, 
+                span.clone()
+            )),
+            span,
+        ))
+    }
+
+    fn consume_identifier(&mut self) -> ParseResult<String> {
+        let token = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
+            expected: vec!["identifier".to_string()],
+        })?;
+        
+        match token.token_type {
+            TokenType::Identifier => Ok(token.lexeme.clone()),
+            _ => Err(ParseError::UnexpectedToken {
+                expected: vec!["identifier".to_string()],
+                found: token.clone(),
+            }),
+        }
+    }
+
+    fn matches(&mut self, types: &[TokenType]) -> bool {
+        if let Some(token) = self.peek() {
+            types.contains(&token.token_type)
+        } else {
+            false
+        }
     }
 }
