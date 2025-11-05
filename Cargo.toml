@@ -1,0 +1,20 @@
+[workspace]
+members = [
+    "cobol-lexer",
+    "cobol-ast",
+    "cobol-parser",
+    "cobol-migration-analyzer",
+    "cobol-doc-gen",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/MarsZDF/cobalt"
+edition = "2021"
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }
+criterion = { version = "0.5", features = ["html_reports"] }

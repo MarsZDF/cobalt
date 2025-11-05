@@ -1,0 +1,21 @@
+[package]
+name = "cobol-parser"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/MarsZDF/cobalt"
+description = "Parser for COBOL source code that produces AST"
+keywords = ["cobol", "parser", "ast", "compiler"]
+categories = ["parsing", "development-tools"]
+
+[dependencies]
+cobol-lexer = { path = "../cobol-lexer" }
+cobol-ast = { path = "../cobol-ast" }
+
+[dev-dependencies]
+# For testing
+
+[lib]
+name = "cobol_parser"
+path = "src/lib.rs"

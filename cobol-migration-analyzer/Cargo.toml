@@ -1,0 +1,32 @@
+[package]
+name = "cobol-migration-analyzer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/MarsZDF/cobalt"
+description = "Migration assessment tool for COBOL to cloud/microservices transformation"
+keywords = ["cobol", "migration", "cloud", "microservices", "assessment"]
+categories = ["parsing", "development-tools"]
+
+[dependencies]
+cobol-ast = { path = "../cobol-ast" }
+cobol-lexer = { path = "../cobol-lexer" }
+cobol-parser = { path = "../cobol-parser" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4"] }
+
+[dev-dependencies]
+tempfile = "3.0"
+
+[lib]
+name = "cobol_migration_analyzer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cobol-migrate"
+path = "src/main.rs"

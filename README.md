@@ -26,12 +26,24 @@ Abstract Syntax Tree (AST) data structures for COBOL programs.
 [📖 Documentation](cobol-ast/README.md)
 
 ### cobol-parser
-Parses tokens into AST (coming soon).
+Parses tokens into AST.
 
-**Status**: 🚧 Planned
+**Status**: ✅ Basic parsing implemented
+
+[📖 Documentation](cobol-parser/README.md)
+
+### cobol-migration-analyzer
+Migration assessment tool for COBOL to cloud/microservices transformation.
+
+**Status**: ✅ Implemented
+
+### cobol-doc-gen
+Documentation generator for COBOL programs - converts COBOL to readable specifications.
+
+**Status**: ✅ Implemented
 
 ### cobol-analyzer-*
-Various analysis modules (coming soon).
+Additional analysis modules (coming soon).
 
 **Status**: 🚧 Planned
 
@@ -155,7 +167,8 @@ at your option.
 - [x] cobol-lexer - Free-format COBOL lexer
 - [ ] cobol-lexer - Fixed-format COBOL lexer
 - [x] cobol-ast - Core AST structures
-- [ ] cobol-parser - Parser implementation
+- [x] cobol-parser - Basic parser implementation
+- [ ] cobol-parser - Full COBOL grammar support
 - [ ] cobol-analyzer-* - Analysis modules
 - [ ] Language server support
 - [ ] Formatter

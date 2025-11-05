@@ -44,6 +44,18 @@ jobs:
       - name: Test cobol-ast
         working-directory: cobol-ast
         run: cargo test --verbose
+      
+      - name: Test cobol-parser
+        working-directory: cobol-parser
+        run: cargo test --verbose
+      
+      - name: Test cobol-migration-analyzer
+        working-directory: cobol-migration-analyzer
+        run: cargo test --verbose
+      
+      - name: Test cobol-doc-gen
+        working-directory: cobol-doc-gen
+        run: cargo test --verbose
 
   lint:
     name: Lint
@@ -84,6 +96,30 @@ jobs:
       - name: Clippy (cobol-ast)
         working-directory: cobol-ast
         run: cargo clippy -- -D warnings
+      
+      - name: Check formatting (cobol-parser)
+        working-directory: cobol-parser
+        run: cargo fmt -- --check
+      
+      - name: Clippy (cobol-parser)
+        working-directory: cobol-parser
+        run: cargo clippy -- -D warnings
+      
+      - name: Check formatting (cobol-migration-analyzer)
+        working-directory: cobol-migration-analyzer
+        run: cargo fmt -- --check
+      
+      - name: Clippy (cobol-migration-analyzer)
+        working-directory: cobol-migration-analyzer
+        run: cargo clippy -- -D warnings
+      
+      - name: Check formatting (cobol-doc-gen)
+        working-directory: cobol-doc-gen
+        run: cargo fmt -- --check
+      
+      - name: Clippy (cobol-doc-gen)
+        working-directory: cobol-doc-gen
+        run: cargo clippy -- -D warnings
 
   build:
     name: Build
@@ -120,6 +156,18 @@ jobs:
       - name: Build cobol-ast
         working-directory: cobol-ast
         run: cargo build --verbose --release
+      
+      - name: Build cobol-parser
+        working-directory: cobol-parser
+        run: cargo build --verbose --release
+      
+      - name: Build cobol-migration-analyzer
+        working-directory: cobol-migration-analyzer
+        run: cargo build --verbose --release
+      
+      - name: Build cobol-doc-gen
+        working-directory: cobol-doc-gen
+        run: cargo build --verbose --release
 
   examples:
     name: Build Examples
@@ -145,6 +193,10 @@ jobs:
       
       - name: Build examples (cobol-lexer)
         working-directory: cobol-lexer
+        run: cargo build --examples --verbose
+      
+      - name: Build examples (cobol-parser)
+        working-directory: cobol-parser
         run: cargo build --examples --verbose
 
   docs:
@@ -175,4 +227,8 @@ jobs:
       
       - name: Build docs (cobol-ast)
         working-directory: cobol-ast
+        run: cargo doc --no-deps --verbose
+      
+      - name: Build docs (cobol-parser)
+        working-directory: cobol-parser
         run: cargo doc --no-deps --verbose
