@@ -1,6 +1,6 @@
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use cobol_doc_gen::{DocumentGenerator, GeneratorConfig, OutputFormat};
-use cobol_doc_gen::security::{safe_read_file, safe_write_file, sanitize_for_display};
+use cobol_doc_gen::security::{safe_read_file, safe_write_file};
 use std::path::PathBuf;
 use std::fs;
 use anyhow::{Result, Context};
@@ -50,7 +50,7 @@ fn main() -> Result<()> {
 
     // Configure the generator
     let config = GeneratorConfig {
-        template_dir: cli.template_dir,
+        template_dir: cli.template_dir.clone(),
         include_source_code: cli.include_source,
         include_complexity_metrics: cli.include_metrics,
         include_cross_references: cli.include_references,
@@ -183,7 +183,7 @@ fn parse_cobol_file(file_path: &PathBuf) -> Result<cobol_ast::Program> {
 fn create_fallback_program(input_path: &PathBuf) -> Result<cobol_ast::Program> {
     use cobol_ast::*;
 
-    let span = Span::new(1, 1, 0, 0, 100);
+    let span = Span::new(1, 1, 1, 1, 0, 100);
     
     let program_name = input_path
         .file_stem()
@@ -203,6 +203,9 @@ fn create_fallback_program(input_path: &PathBuf) -> Result<cobol_ast::Program> {
     
     let procedure = ProcedureDivision {
         using: None,
+        returning: None,
+        sections: Vec::new(),
+        paragraphs: Vec::new(),
         statements: Vec::new(),
     };
 

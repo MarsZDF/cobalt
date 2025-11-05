@@ -46,7 +46,7 @@ impl MicroservicesAnalyzer {
                 let candidate = MicroserviceCandidate {
                     name: self.generate_service_name(&domain),
                     programs: domain_programs.iter().map(|p| 
-                        p.program_id.clone().unwrap_or_else(|| "UNKNOWN".to_string())
+                        p.identification.node.program_id.clone().unwrap_or_else(|| "UNKNOWN".to_string())
                     ).collect(),
                     business_capability: domain.clone(),
                     data_entities: self.extract_data_entities(&domain_programs),
@@ -66,7 +66,7 @@ impl MicroservicesAnalyzer {
         Ok(candidates)
     }
 
-    fn group_programs_by_domain(&self, programs: &[&Program]) -> HashMap<String, Vec<&Program>> {
+    fn group_programs_by_domain<'a>(&self, programs: &[&'a Program]) -> HashMap<String, Vec<&'a Program>> {
         let mut domain_groups: HashMap<String, Vec<&Program>> = HashMap::new();
 
         for program in programs {
@@ -78,7 +78,8 @@ impl MicroservicesAnalyzer {
     }
 
     fn infer_business_domain(&self, program: &Program) -> String {
-        let program_id = program.program_id.as_ref().unwrap_or(&"UNKNOWN".to_string());
+        let unknown = "UNKNOWN".to_string();
+        let program_id = program.identification.node.program_id.as_ref().unwrap_or(&unknown);
         
         // Simple heuristics based on program naming conventions
         if program_id.contains("CUST") || program_id.contains("CLIENT") {
@@ -139,7 +140,7 @@ impl MicroservicesAnalyzer {
         for program in programs {
             // Extract data entities from program structure
             // This is a simplified implementation
-            if let Some(ref data_division) = program.data_division {
+            if let Some(ref data_division) = program.data {
                 // Would analyze working storage and file sections to identify entities
                 entities.insert("Customer".to_string());
                 entities.insert("Transaction".to_string());
@@ -203,7 +204,7 @@ impl MicroservicesAnalyzer {
             let candidate = MicroserviceCandidate {
                 name: format!("legacy-service-{}", service_counter),
                 programs: chunk.iter().map(|p| 
-                    p.program_id.clone().unwrap_or_else(|| format!("PROG{}", service_counter))
+                    p.identification.node.program_id.clone().unwrap_or_else(|| format!("PROG{}", service_counter))
                 ).collect(),
                 business_capability: "Legacy Business Logic".to_string(),
                 data_entities: vec!["LegacyData".to_string()],

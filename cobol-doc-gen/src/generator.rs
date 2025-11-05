@@ -87,12 +87,12 @@ impl DocumentGenerator {
 
     fn generate_html(&self, documentation: &Documentation) -> Result<String> {
         let context = self.create_template_context(documentation)?;
-        self.template_engine.render("program.html", &context)
+        Ok(self.template_engine.render("program.html", &context)?)
     }
 
     fn generate_markdown(&self, documentation: &Documentation) -> Result<String> {
         let context = self.create_template_context(documentation)?;
-        self.template_engine.render("program.md", &context)
+        Ok(self.template_engine.render("program.md", &context)?)
     }
 
     fn generate_json(&self, documentation: &Documentation) -> Result<String> {
@@ -123,7 +123,7 @@ impl DocumentGenerator {
             "include_complexity_metrics": self.config.include_complexity_metrics,
             "include_cross_references": self.config.include_cross_references,
         });
-        self.template_engine.render("system.html", &context)
+        Ok(self.template_engine.render("system.html", &context)?)
     }
 
     fn generate_system_markdown(&self, docs: &[Documentation]) -> Result<String> {
@@ -131,7 +131,7 @@ impl DocumentGenerator {
             "programs": docs,
             "system_summary": self.create_system_summary(docs),
         });
-        self.template_engine.render("system.md", &context)
+        Ok(self.template_engine.render("system.md", &context)?)
     }
 
     fn generate_system_json(&self, docs: &[Documentation]) -> Result<String> {

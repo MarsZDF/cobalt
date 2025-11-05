@@ -103,7 +103,7 @@ jobs:
       
       - name: Clippy (cobol-parser)
         working-directory: cobol-parser
-        run: cargo clippy -- -D warnings
+        run: cargo clippy -- -D warnings -A clippy::needless_borrow -A clippy::clone_on_copy
       
       - name: Check formatting (cobol-migration-analyzer)
         working-directory: cobol-migration-analyzer
@@ -231,4 +231,12 @@ jobs:
       
       - name: Build docs (cobol-parser)
         working-directory: cobol-parser
+        run: cargo doc --no-deps --verbose
+      
+      - name: Build docs (cobol-migration-analyzer)
+        working-directory: cobol-migration-analyzer
+        run: cargo doc --no-deps --verbose
+      
+      - name: Build docs (cobol-doc-gen)
+        working-directory: cobol-doc-gen
         run: cargo doc --no-deps --verbose

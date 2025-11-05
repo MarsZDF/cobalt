@@ -3,6 +3,7 @@ use crate::token::{lookup_keyword, Token, TokenType};
 
 /// Lexer for free-format COBOL.
 pub struct FreeFormatLexer<'a> {
+    #[allow(dead_code)]
     source: &'a str,
     chars: std::str::Chars<'a>,
     current_pos: usize,
@@ -54,10 +55,10 @@ impl<'a> FreeFormatLexer<'a> {
         self.current_pos += ch.len_utf8();
     }
 
-    /// Skip whitespace (except newlines, which are significant).
+    /// Skip whitespace including newlines.
     fn skip_whitespace(&mut self) {
         while let Some(ch) = self.peek_char() {
-            if ch == ' ' || ch == '\t' || ch == '\r' {
+            if ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' {
                 self.next_char();
             } else {
                 break;
@@ -172,7 +173,10 @@ impl<'a> FreeFormatLexer<'a> {
             }
 
             // Whitespace (should be skipped, but we're here as fallback)
-            ' ' | '\t' => return Ok(None),
+            ' ' | '\t' | '\r' => return Ok(None),
+            
+            // Newlines are handled in skip_whitespace
+            '\n' => return Ok(None),
 
             // Unknown
             ch => {
@@ -188,7 +192,7 @@ impl<'a> FreeFormatLexer<'a> {
     }
 
     fn tokenize_comment(&mut self, start_line: usize, start_column: usize, start_pos: usize) -> LexResult<Token> {
-        let mut comment = String::from("*>");
+        let _comment = String::from("*>");
         let mut content = String::new();
 
         while let Some(ch) = self.next_char() {
@@ -231,6 +235,7 @@ impl<'a> FreeFormatLexer<'a> {
     fn tokenize_string(&mut self, quote: char, start_line: usize, start_column: usize, start_pos: usize) -> LexResult<Token> {
         let mut value = String::new();
         let mut lexeme = String::from(quote);
+        let mut terminated = false;
 
         while let Some(ch) = self.next_char() {
             match ch {
@@ -246,6 +251,7 @@ impl<'a> FreeFormatLexer<'a> {
                 }
                 ch if ch == quote => {
                     lexeme.push(ch);
+                    terminated = true;
                     break;
                 }
                 '\n' => {
@@ -259,6 +265,13 @@ impl<'a> FreeFormatLexer<'a> {
                     lexeme.push(ch);
                 }
             }
+        }
+
+        if !terminated {
+            return Err(LexError::UnterminatedString {
+                line: start_line,
+                column: start_column,
+            });
         }
 
         Ok(Token::new(

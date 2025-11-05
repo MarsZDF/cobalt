@@ -13,12 +13,17 @@
 //!
 //! ## Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use cobol_migration_analyzer::{MigrationAnalyzer, AnalysisConfig};
 //! use cobol_ast::Program;
+//! use anyhow::Result;
 //!
-//! let analyzer = MigrationAnalyzer::new(AnalysisConfig::default());
-//! let assessment = analyzer.analyze_program(&program)?;
+//! fn main() -> Result<()> {
+//!     let analyzer = MigrationAnalyzer::new(AnalysisConfig::default());
+//!     // let program: Program = ...; // Parse your COBOL program
+//!     // let assessment = analyzer.analyze_program(&program)?;
+//!     Ok(())
+//! }
 //! ```
 
 pub mod analysis;

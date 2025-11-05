@@ -61,12 +61,13 @@ impl Parser {
         // Parse PROGRAM-ID if present
         if self.check_token(TokenType::ProgramId) {
             self.advance(); // consume PROGRAM-ID
+            self.consume_token(TokenType::Period)?; // consume the period after PROGRAM-ID
             if let Some(token) = self.advance() {
                 if let TokenType::Identifier(ref name) = token.token_type {
                     program_id = Some(name.clone());
                 }
             }
-            self.consume_token(TokenType::Period)?;
+            self.consume_token(TokenType::Period)?; // consume the period after the program name
         }
 
         // Skip to next division (simplified - would parse other entries)
@@ -138,7 +139,7 @@ impl Parser {
         // Parse WORKING-STORAGE SECTION if present
         if self.check_token(TokenType::WorkingStorage) {
             let ws_start = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
-                message: "Expected WORKING-STORAGE token".to_string(),
+                expected: vec!["WORKING-STORAGE".to_string()],
             })?;
             self.consume_token(TokenType::Section)?;
             self.consume_token(TokenType::Period)?;
@@ -258,31 +259,96 @@ impl Parser {
         while !self.is_at_end() {
             if self.check_token(TokenType::Pic) || self.check_token(TokenType::Picture) {
                 let pic_start = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
-                    message: "Expected PICTURE token".to_string(),
+                    expected: vec!["PICTURE".to_string()],
                 })?;
-                // Simplified - would parse PICTURE string
-                if let Some(pic_token) = self.advance() {
-                    if let TokenType::StringLiteral(ref pic_str) = pic_token.token_type {
-                        let pic_span = self.create_span(&pic_start, &pic_token);
-                        picture = Some(Spanned::new(Picture::new(pic_str.clone()), pic_span));
+                // Parse PICTURE clause - need to handle various formats like 9(5), X(10), etc.
+                let mut pic_string = String::new();
+                let mut last_token = pic_start.clone();
+                
+                // Continue parsing tokens until we hit VALUE, period, or other data item keywords
+                while let Some(token) = self.peek() {
+                    match &token.token_type {
+                        TokenType::LevelNumber(n) => {
+                            pic_string.push_str(&n.to_string());
+                            last_token = self.advance().unwrap();
+                        }
+                        TokenType::LeftParen => {
+                            pic_string.push('(');
+                            last_token = self.advance().unwrap();
+                        }
+                        TokenType::RightParen => {
+                            pic_string.push(')');
+                            last_token = self.advance().unwrap();
+                        }
+                        TokenType::Identifier(ref s) if s == "X" || s == "A" || s == "9" => {
+                            pic_string.push_str(s);
+                            last_token = self.advance().unwrap();
+                        }
+                        TokenType::StringLiteral(ref s) => {
+                            pic_string.push_str(s);
+                            last_token = self.advance().unwrap();
+                        }
+                        TokenType::Value | TokenType::Period if pic_string.len() > 0 => {
+                            break;
+                        }
+                        _ => break,
                     }
+                }
+                
+                if !pic_string.is_empty() {
+                    let pic_span = self.create_span(&pic_start, &last_token);
+                    picture = Some(Spanned::new(Picture::new(pic_string), pic_span));
                 }
             } else if self.check_token(TokenType::Value) {
                 let value_start = self.advance().ok_or_else(|| ParseError::UnexpectedEof {
-                    message: "Expected VALUE token".to_string(),
+                    expected: vec!["VALUE".to_string()],
                 })?;
-                // Simplified - would parse VALUE clause
+                // Parse VALUE clause - handle both string and numeric literals
                 if let Some(value_token) = self.advance() {
-                    if let TokenType::StringLiteral(ref lit) = value_token.token_type {
-                        let value_span = self.create_span(&value_start, &value_token);
-                        value = Some(Spanned::new(
-                            InitialValue::Literal(Literal::String(lit.clone())),
-                            value_span,
-                        ));
+                    let value_span = self.create_span(&value_start, &value_token);
+                    match &value_token.token_type {
+                        TokenType::StringLiteral(ref lit) => {
+                            value = Some(Spanned::new(
+                                InitialValue::Literal(Literal::String(lit.clone())),
+                                value_span,
+                            ));
+                        }
+                        TokenType::NumericLiteral(ref lit) => {
+                            // Parse the numeric literal string into a NumericLiteral
+                            if let Ok(f_val) = lit.parse::<f64>() {
+                                let is_integer = !lit.contains('.');
+                                value = Some(Spanned::new(
+                                    InitialValue::Literal(Literal::Numeric(NumericLiteral {
+                                        value: f_val,
+                                        is_integer,
+                                    })),
+                                    value_span,
+                                ));
+                            } else {
+                                // If parsing fails, treat as string
+                                value = Some(Spanned::new(
+                                    InitialValue::Literal(Literal::String(lit.clone())),
+                                    value_span,
+                                ));
+                            }
+                        }
+                        _ => {
+                            // For now, treat other tokens as string literals
+                            value = Some(Spanned::new(
+                                InitialValue::Literal(Literal::String(value_token.lexeme.clone())),
+                                value_span,
+                            ));
+                        }
                     }
                 }
             } else if self.check_token(TokenType::Period) {
                 self.advance();
+                break;
+            } else if self.check_token(TokenType::Procedure) || 
+                      self.check_token(TokenType::Data) ||
+                      self.check_token(TokenType::Environment) ||
+                      self.check_level_number() {
+                // Stop parsing this data item when we hit division keywords or next level number
                 break;
             } else {
                 self.advance(); // Skip other clauses for now
@@ -550,9 +616,9 @@ impl Parser {
     }
 
     fn consume_token(&mut self, token_type: TokenType) -> ParseResult<Token> {
-        if self.check_token(token_type) {
+        if self.check_token(token_type.clone()) {
             self.advance().ok_or_else(|| ParseError::UnexpectedEof {
-                message: format!("Expected {:?} token", token_type),
+                expected: vec![format!("{:?}", token_type)],
             })
         } else {
             let found = self.peek().cloned().unwrap_or_else(|| Token::new(
@@ -799,7 +865,7 @@ impl Parser {
             Statement::String(Spanned::new(
                 StringStatement {
                     sources: Vec::new(),
-                    destination: Spanned::new(Expression::Identifier(Spanned::new("temp".to_string(), span.clone())), span.clone()),
+                    destination: Spanned::new(Expression::Identifier("temp".to_string()), span.clone()),
                     pointer: None,
                     on_overflow: None,
                     not_on_overflow: None,
@@ -819,7 +885,7 @@ impl Parser {
         Ok(Spanned::new(
             Statement::Unstring(Spanned::new(
                 UnstringStatement {
-                    source: Spanned::new(Expression::Identifier(Spanned::new("temp".to_string(), span.clone())), span.clone()),
+                    source: Spanned::new(Expression::Identifier("temp".to_string()), span.clone()),
                     delimiters: Vec::new(),
                     destinations: Vec::new(),
                     pointer: None,
@@ -901,10 +967,10 @@ impl Parser {
         let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
-            Statement::Perform(Spanned::new(
+            Statement::Perform(Box::new(Spanned::new(
                 PerformStatement::Simple { paragraph, through: None },
                 span.clone()
-            )),
+            ))),
             span,
         ))
     }
@@ -934,7 +1000,7 @@ impl Parser {
         })?;
         
         match token.token_type {
-            TokenType::Identifier => Ok(token.lexeme.clone()),
+            TokenType::Identifier(name) => Ok(name),
             _ => Err(ParseError::UnexpectedToken {
                 expected: vec!["identifier".to_string()],
                 found: token.clone(),

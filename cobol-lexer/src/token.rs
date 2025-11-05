@@ -91,6 +91,10 @@ pub enum TokenType {
     Delete,
     Start,
     Unlock,
+    Input,
+    Output,
+    InputOutput,
+    Extend,
     
     // String operations
     StringStmt,  // STRING statement (different from String literal)

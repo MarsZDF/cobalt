@@ -1,4 +1,4 @@
-use crate::span::{Span, Spanned};
+use crate::span::Spanned;
 use crate::literal::Literal;
 
 /// Data division item.

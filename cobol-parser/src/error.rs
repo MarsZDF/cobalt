@@ -1,4 +1,4 @@
-use cobol_lexer::{LexError, Token, TokenType};
+use cobol_lexer::{LexError, Token};
 use std::fmt;
 
 /// Parse error type.

@@ -451,7 +451,7 @@ impl MigrationAnalyzer {
     }
 
     fn calculate_program_debt_score(&self, program: &Program) -> f64 {
-        let mut debt_score = 0.0;
+        let mut debt_score: f32 = 0.0;
         
         // Check for program metadata completeness
         let id_div = &program.identification.node;
@@ -471,7 +471,7 @@ impl MigrationAnalyzer {
         // Check for empty procedure division
         if statement_count == 0 { debt_score += 25.0; }
         
-        debt_score.min(100.0)
+        debt_score.min(100.0).into()
     }
     
     fn identify_debt_issues(&self, program: &Program) -> Vec<String> {

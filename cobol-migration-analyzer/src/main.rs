@@ -198,7 +198,7 @@ fn create_fallback_program(input_path: &PathBuf) -> Result<cobol_ast::Program> {
     use cobol_ast::*;
     
     // Create a fallback program structure using the real AST types
-    let span = Span::new(1, 1, 0, 0, 100);
+    let span = Span::new(1, 1, 1, 1, 0, 100);
     
     let program_name = input_path
         .file_stem()
@@ -218,6 +218,9 @@ fn create_fallback_program(input_path: &PathBuf) -> Result<cobol_ast::Program> {
     
     let procedure = ProcedureDivision {
         using: None,
+        returning: None,
+        sections: Vec::new(),
+        paragraphs: Vec::new(),
         statements: Vec::new(),
     };
 

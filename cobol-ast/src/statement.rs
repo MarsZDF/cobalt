@@ -1,4 +1,4 @@
-use crate::span::{Span, Spanned};
+use crate::span::Spanned;
 use crate::expression::Expression;
 use crate::literal::Literal;
 
@@ -12,7 +12,7 @@ pub enum Statement {
     Compute(Spanned<ComputeStatement>),
     If(Spanned<IfStatement>),
     Evaluate(Spanned<EvaluateStatement>),
-    Perform(Spanned<PerformStatement>),
+    Perform(Box<Spanned<PerformStatement>>),
     Call(Spanned<CallStatement>),
     GoTo(Spanned<GoToStatement>),
     GoBack(Spanned<GoBackStatement>),

@@ -1,5 +1,5 @@
 use crate::error::{LexError, LexResult};
-use crate::token::{lookup_keyword, Token, TokenType};
+use crate::token::Token;
 use crate::free::FreeFormatLexer;
 
 /// Lexer for fixed-format COBOL.
@@ -9,6 +9,7 @@ use crate::free::FreeFormatLexer;
 /// - Column 7: Indicator area (* for comments, - for continuation, space/D for code)
 /// - Columns 8-72: Code area
 /// - Columns 73-80: Program identification (optional, typically ignored)
+#[allow(dead_code)]
 pub struct FixedFormatLexer<'a> {
     source: &'a str,
     lines: Vec<&'a str>,
@@ -40,7 +41,7 @@ impl<'a> FixedFormatLexer<'a> {
     fn preprocess_fixed_format(&mut self) -> LexResult<String> {
         let mut result = String::new();
         let mut continuation_mode = false;
-        let mut previous_line_content = String::new();
+        let _previous_line_content = String::new();
 
         for (line_num, line) in self.lines.iter().enumerate() {
             let line_type = self.classify_line(line);
@@ -139,12 +140,14 @@ enum LineType {
 }
 
 /// Check if a line is a comment line (starts with * in column 7).
+#[allow(dead_code)]
 fn is_comment_line(line: &str) -> bool {
     let trimmed = line.trim_start();
     trimmed.starts_with('*') && trimmed.len() >= 7 && trimmed.chars().nth(6) == Some('*')
 }
 
 /// Check if a line is a continuation line (has - in column 7).
+#[allow(dead_code)]
 fn is_continuation_line(line: &str) -> bool {
     line.len() >= 7 && line.chars().nth(6) == Some('-')
 }

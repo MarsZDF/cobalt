@@ -1,4 +1,4 @@
-use crate::error::{LexError, LexResult};
+use crate::error::LexResult;
 use crate::fixed::FixedFormatLexer;
 use crate::free::FreeFormatLexer;
 use crate::token::Token;

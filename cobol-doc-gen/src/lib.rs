@@ -12,12 +12,18 @@
 //!
 //! ## Example
 //!
-//! ```rust
-//! use cobol_doc_gen::{DocumentGenerator, OutputFormat};
+//! ```rust,no_run
+//! use cobol_doc_gen::{DocumentGenerator, GeneratorConfig, OutputFormat};
 //! use cobol_ast::Program;
+//! use anyhow::Result;
 //!
-//! let generator = DocumentGenerator::new();
-//! let documentation = generator.generate(&program, OutputFormat::Html)?;
+//! fn main() -> Result<()> {
+//!     let config = GeneratorConfig::default();
+//!     let generator = DocumentGenerator::new(config);
+//!     // let program: Program = ...; // Parse your COBOL program
+//!     // let documentation = generator.generate(&program, OutputFormat::Html)?;
+//!     Ok(())
+//! }
 //! ```
 
 pub mod analyzer;

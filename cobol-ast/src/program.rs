@@ -1,4 +1,4 @@
-use crate::span::{Span, Spanned};
+use crate::span::Spanned;
 use crate::data::DataItem;
 use crate::statement::Statement;
 

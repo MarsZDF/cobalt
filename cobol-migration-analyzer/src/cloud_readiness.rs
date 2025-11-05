@@ -62,7 +62,7 @@ impl CloudReadinessAnalyzer {
             score += 10.0;
         }
 
-        Ok(score.clamp(0.0, 100.0))
+        Ok(score.clamp(0.0, 100.0).into())
     }
 
     fn analyze_data_management_readiness(&self, programs: &[&Program]) -> Result<f64> {
@@ -85,11 +85,11 @@ impl CloudReadinessAnalyzer {
         let consistency_complexity = self.analyze_data_consistency_requirements(programs);
         score -= consistency_complexity * 5.0;
 
-        Ok(score.clamp(0.0, 100.0))
+        Ok(score.clamp(0.0, 100.0).into())
     }
 
     fn analyze_security_readiness(&self, programs: &[&Program]) -> Result<f64> {
-        let mut score = 60.0; // Conservative base score for legacy systems
+        let mut score: f32 = 60.0; // Conservative base score for legacy systems
 
         // Check for hardcoded credentials (security risk)
         if self.has_hardcoded_credentials(programs) {
@@ -111,11 +111,11 @@ impl CloudReadinessAnalyzer {
             score += 15.0;
         }
 
-        Ok(score.clamp(0.0, 100.0))
+        Ok(score.clamp(0.0, 100.0).into())
     }
 
     fn analyze_scalability_readiness(&self, programs: &[&Program]) -> Result<f64> {
-        let mut score = 65.0; // Base score
+        let mut score: f32 = 65.0; // Base score
 
         // Check for stateless operations
         if self.is_mostly_stateless(programs) {
@@ -138,7 +138,7 @@ impl CloudReadinessAnalyzer {
             score += 15.0;
         }
 
-        Ok(score.clamp(0.0, 100.0))
+        Ok(score.clamp(0.0, 100.0).into())
     }
 
     fn analyze_monitoring_readiness(&self, programs: &[&Program]) -> Result<f64> {
@@ -158,7 +158,7 @@ impl CloudReadinessAnalyzer {
             score += 20.0;
         }
 
-        Ok(score.clamp(0.0, 100.0))
+        Ok(score.clamp(0.0, 100.0).into())
     }
 
     fn analyze_deployment_readiness(&self, programs: &[&Program]) -> Result<f64> {
@@ -182,7 +182,7 @@ impl CloudReadinessAnalyzer {
         let dependency_complexity = self.assess_dependency_complexity(programs);
         score -= dependency_complexity * 5.0;
 
-        Ok(score.clamp(0.0, 100.0))
+        Ok(score.clamp(0.0, 100.0).into())
     }
 
     fn identify_blockers(&self, programs: &[&Program]) -> Result<Vec<CloudMigrationBlocker>> {

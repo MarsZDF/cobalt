@@ -3,8 +3,8 @@ members = [
     "cobol-lexer",
     "cobol-ast",
     "cobol-parser",
-    "cobol-migration-analyzer",
     "cobol-doc-gen",
+    "cobol-migration-analyzer",
 ]
 resolver = "2"
 

@@ -138,6 +138,14 @@ pub struct CopybookReference {
     pub replacing: Option<String>,
 }
 
+/// Paragraph call information.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParagraphCall {
+    pub paragraph_name: String,
+    pub call_line: usize,
+    pub call_type: String,
+}
+
 /// Code complexity metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplexityMetrics {
@@ -148,3 +156,4 @@ pub struct ComplexityMetrics {
     pub maintainability_index: f64,
     pub technical_debt_minutes: f64,
 }
+

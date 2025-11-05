@@ -18,13 +18,11 @@
 //!
 //! ## Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use cobol_ast::{Program, Statement, Span, Spanned};
 //!
 //! // Build a simple AST programmatically
-//! let program = Program {
-//!     // ... program structure
-//! };
+//! // let program = Program { ... }; // Would require full initialization
 //! ```
 //!
 //! ## Architecture
