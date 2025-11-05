@@ -28,14 +28,14 @@
 
 pub mod analysis;
 pub mod assessment;
-pub mod microservices;
 pub mod cloud_readiness;
 pub mod effort_estimation;
-pub mod recommendations;
+pub mod microservices;
 pub mod models;
+pub mod recommendations;
 pub mod security;
 
-pub use analysis::{MigrationAnalyzer, AnalysisConfig};
+pub use analysis::{AnalysisConfig, MigrationAnalyzer};
 pub use assessment::MigrationAssessment;
 pub use models::*;
 

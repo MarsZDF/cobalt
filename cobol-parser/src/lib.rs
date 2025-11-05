@@ -43,7 +43,9 @@ pub use parser::Parser;
 /// Parse tokens into an AST program.
 ///
 /// This is a convenience function that creates a parser and parses the tokens.
-pub fn parse(tokens: Vec<cobol_lexer::Token>) -> ParseResult<cobol_ast::Spanned<cobol_ast::Program>> {
+pub fn parse(
+    tokens: Vec<cobol_lexer::Token>,
+) -> ParseResult<cobol_ast::Spanned<cobol_ast::Program>> {
     let mut parser = Parser::new(tokens);
     parser.parse_program()
 }
@@ -51,7 +53,10 @@ pub fn parse(tokens: Vec<cobol_lexer::Token>) -> ParseResult<cobol_ast::Spanned<
 /// Parse a COBOL source string directly.
 ///
 /// This convenience function tokenizes and then parses the source code.
-pub fn parse_source(source: &str, format: cobol_lexer::Format) -> ParseResult<cobol_ast::Spanned<cobol_ast::Program>> {
+pub fn parse_source(
+    source: &str,
+    format: cobol_lexer::Format,
+) -> ParseResult<cobol_ast::Spanned<cobol_ast::Program>> {
     let tokens = cobol_lexer::tokenize(source, format)?;
     parse(tokens)
 }

@@ -1,11 +1,11 @@
+use anyhow::{Context, Result};
 use clap::Parser;
-use cobol_doc_gen::{DocumentGenerator, GeneratorConfig, OutputFormat};
 use cobol_doc_gen::security::{safe_read_file, safe_write_file};
-use std::path::PathBuf;
-use std::fs;
-use anyhow::{Result, Context};
-use cobol_parser;
+use cobol_doc_gen::{DocumentGenerator, GeneratorConfig, OutputFormat};
 use cobol_lexer;
+use cobol_parser;
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "cobol-doc")]
@@ -70,7 +70,7 @@ fn main() -> Result<()> {
 
 fn generate_single_program_documentation(generator: &DocumentGenerator, cli: &Cli) -> Result<()> {
     let program = parse_cobol_input(&cli.input)?;
-    
+
     let documentation = generator.generate(&program, cli.format)?;
 
     match &cli.output {
@@ -88,7 +88,7 @@ fn generate_single_program_documentation(generator: &DocumentGenerator, cli: &Cl
 
 fn generate_system_documentation(generator: &DocumentGenerator, cli: &Cli) -> Result<()> {
     let mut programs = Vec::new();
-    
+
     if cli.input.is_dir() {
         // Scan directory for COBOL files
         let cobol_files = find_cobol_files(&cli.input)?;
@@ -101,9 +101,12 @@ fn generate_system_documentation(generator: &DocumentGenerator, cli: &Cli) -> Re
                 }
             }
         }
-        
+
         if programs.is_empty() {
-            eprintln!("No COBOL files found or parsed successfully in directory: {}", cli.input.display());
+            eprintln!(
+                "No COBOL files found or parsed successfully in directory: {}",
+                cli.input.display()
+            );
             // Create a fallback program for demonstration
             programs.push(create_fallback_program(&cli.input)?);
         }
@@ -111,7 +114,7 @@ fn generate_system_documentation(generator: &DocumentGenerator, cli: &Cli) -> Re
         // Single file
         programs.push(parse_cobol_input(&cli.input)?);
     }
-    
+
     let documentation = generator.generate_system_documentation(&programs, cli.format)?;
 
     match &cli.output {
@@ -145,14 +148,14 @@ fn parse_cobol_input(input_path: &PathBuf) -> Result<cobol_ast::Program> {
 
 fn find_cobol_files(dir_path: &PathBuf) -> Result<Vec<PathBuf>> {
     let mut cobol_files = Vec::new();
-    
+
     let entries = fs::read_dir(dir_path)
         .with_context(|| format!("Failed to read directory: {}", dir_path.display()))?;
-    
+
     for entry in entries {
         let entry = entry?;
         let path = entry.path();
-        
+
         if path.is_file() {
             if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
                 if matches!(extension.to_lowercase().as_str(), "cob" | "cobol" | "cbl") {
@@ -161,7 +164,7 @@ fn find_cobol_files(dir_path: &PathBuf) -> Result<Vec<PathBuf>> {
             }
         }
     }
-    
+
     cobol_files.sort();
     Ok(cobol_files)
 }
@@ -169,11 +172,15 @@ fn find_cobol_files(dir_path: &PathBuf) -> Result<Vec<PathBuf>> {
 fn parse_cobol_file(file_path: &PathBuf) -> Result<cobol_ast::Program> {
     let source = safe_read_file(file_path)
         .with_context(|| format!("Failed to read COBOL file: {}", file_path.display()))?;
-    
+
     match cobol_parser::parse_source(&source, cobol_lexer::Format::FreeFormat) {
         Ok(program) => Ok(program.node), // Extract the program from Spanned wrapper
         Err(parse_error) => {
-            eprintln!("Warning: Failed to parse COBOL file {}: {}", file_path.display(), parse_error);
+            eprintln!(
+                "Warning: Failed to parse COBOL file {}: {}",
+                file_path.display(),
+                parse_error
+            );
             eprintln!("Falling back to mock program for documentation...");
             create_fallback_program(file_path)
         }
@@ -184,13 +191,13 @@ fn create_fallback_program(input_path: &PathBuf) -> Result<cobol_ast::Program> {
     use cobol_ast::*;
 
     let span = Span::new(1, 1, 1, 1, 0, 100);
-    
+
     let program_name = input_path
         .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("LEGACY-PROGRAM")
         .to_uppercase();
-    
+
     let identification = IdentificationDivision {
         program_id: Some(program_name),
         author: Some("Legacy Developer".to_string()),
@@ -200,7 +207,7 @@ fn create_fallback_program(input_path: &PathBuf) -> Result<cobol_ast::Program> {
         security: None,
         remarks: Some("Legacy COBOL program for documentation".to_string()),
     };
-    
+
     let procedure = ProcedureDivision {
         using: None,
         returning: None,

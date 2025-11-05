@@ -27,15 +27,15 @@
 //! ```
 
 pub mod analyzer;
-pub mod generator;
-pub mod templates;
-pub mod models;
 pub mod formats;
+pub mod generator;
+pub mod models;
 pub mod security;
+pub mod templates;
 
-pub use generator::{DocumentGenerator, GeneratorConfig};
 pub use formats::OutputFormat;
-pub use models::{Documentation, ProgramSummary, DataStructure, BusinessRule};
+pub use generator::{DocumentGenerator, GeneratorConfig};
+pub use models::{BusinessRule, DataStructure, Documentation, ProgramSummary};
 
 use anyhow::Result;
 

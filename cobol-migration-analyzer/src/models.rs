@@ -1,6 +1,6 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
 
 /// Complete migration assessment for a COBOL system.
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,5 +1,5 @@
-use crate::span::Spanned;
 use crate::literal::Literal;
+use crate::span::Spanned;
 
 /// Data division item.
 #[derive(Debug, Clone, PartialEq)]
@@ -69,7 +69,7 @@ pub struct OccursClause {
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub enum OccursCount {
     Fixed(u64),
-    Variable(String), // Data name or integer data item
+    Variable(String),                             // Data name or integer data item
     VariableRange { min: u64, max: Option<u64> }, // OCCURS n TO m
 }
 

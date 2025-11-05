@@ -1,9 +1,9 @@
 use crate::error::{LexError, LexResult};
-use crate::token::Token;
 use crate::free::FreeFormatLexer;
+use crate::token::Token;
 
 /// Lexer for fixed-format COBOL.
-/// 
+///
 /// Fixed-format COBOL has specific column rules:
 /// - Columns 1-6: Sequence numbers (optional)
 /// - Column 7: Indicator area (* for comments, - for continuation, space/D for code)
@@ -45,7 +45,7 @@ impl<'a> FixedFormatLexer<'a> {
 
         for (line_num, line) in self.lines.iter().enumerate() {
             let line_type = self.classify_line(line);
-            
+
             match line_type {
                 LineType::Comment => {
                     result.push_str("*> ");
@@ -107,7 +107,7 @@ impl<'a> FixedFormatLexer<'a> {
         }
 
         let indicator = line.chars().nth(6).unwrap_or(' ');
-        
+
         match indicator {
             '*' | '/' => LineType::Comment,
             '-' => LineType::Continuation,

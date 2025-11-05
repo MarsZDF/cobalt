@@ -127,45 +127,125 @@ impl<'a> FreeFormatLexer<'a> {
             }
 
             // Operators and punctuation
-            '=' => self.single_char_token(TokenType::Equals, "=", start_line, start_column, start_pos),
+            '=' => {
+                self.single_char_token(TokenType::Equals, "=", start_line, start_column, start_pos)
+            }
             '<' => {
                 if self.peek_char() == Some('>') {
                     self.next_char();
-                    self.two_char_token(TokenType::NotEquals, "<>", start_line, start_column, start_pos)
+                    self.two_char_token(
+                        TokenType::NotEquals,
+                        "<>",
+                        start_line,
+                        start_column,
+                        start_pos,
+                    )
                 } else if self.peek_char() == Some('=') {
                     self.next_char();
-                    self.two_char_token(TokenType::LessOrEqual, "<=", start_line, start_column, start_pos)
+                    self.two_char_token(
+                        TokenType::LessOrEqual,
+                        "<=",
+                        start_line,
+                        start_column,
+                        start_pos,
+                    )
                 } else {
-                    self.single_char_token(TokenType::LessThan, "<", start_line, start_column, start_pos)
+                    self.single_char_token(
+                        TokenType::LessThan,
+                        "<",
+                        start_line,
+                        start_column,
+                        start_pos,
+                    )
                 }
             }
             '>' => {
                 if self.peek_char() == Some('=') {
                     self.next_char();
-                    self.two_char_token(TokenType::GreaterOrEqual, ">=", start_line, start_column, start_pos)
+                    self.two_char_token(
+                        TokenType::GreaterOrEqual,
+                        ">=",
+                        start_line,
+                        start_column,
+                        start_pos,
+                    )
                 } else {
-                    self.single_char_token(TokenType::GreaterThan, ">", start_line, start_column, start_pos)
+                    self.single_char_token(
+                        TokenType::GreaterThan,
+                        ">",
+                        start_line,
+                        start_column,
+                        start_pos,
+                    )
                 }
             }
-            '+' => self.single_char_token(TokenType::Plus, "+", start_line, start_column, start_pos),
-            '-' => self.single_char_token(TokenType::Minus, "-", start_line, start_column, start_pos),
+            '+' => {
+                self.single_char_token(TokenType::Plus, "+", start_line, start_column, start_pos)
+            }
+            '-' => {
+                self.single_char_token(TokenType::Minus, "-", start_line, start_column, start_pos)
+            }
             '*' => {
                 if self.peek_char() == Some('*') {
                     self.next_char();
                     self.two_char_token(TokenType::Power, "**", start_line, start_column, start_pos)
                 } else {
-                    self.single_char_token(TokenType::Multiply, "*", start_line, start_column, start_pos)
+                    self.single_char_token(
+                        TokenType::Multiply,
+                        "*",
+                        start_line,
+                        start_column,
+                        start_pos,
+                    )
                 }
             }
-            '/' => self.single_char_token(TokenType::Divide, "/", start_line, start_column, start_pos),
-            '.' => self.single_char_token(TokenType::Period, ".", start_line, start_column, start_pos),
-            ',' => self.single_char_token(TokenType::Comma, ",", start_line, start_column, start_pos),
-            ';' => self.single_char_token(TokenType::Semicolon, ";", start_line, start_column, start_pos),
-            ':' => self.single_char_token(TokenType::Colon, ":", start_line, start_column, start_pos),
-            '(' => self.single_char_token(TokenType::LeftParen, "(", start_line, start_column, start_pos),
-            ')' => self.single_char_token(TokenType::RightParen, ")", start_line, start_column, start_pos),
-            '[' => self.single_char_token(TokenType::LeftBracket, "[", start_line, start_column, start_pos),
-            ']' => self.single_char_token(TokenType::RightBracket, "]", start_line, start_column, start_pos),
+            '/' => {
+                self.single_char_token(TokenType::Divide, "/", start_line, start_column, start_pos)
+            }
+            '.' => {
+                self.single_char_token(TokenType::Period, ".", start_line, start_column, start_pos)
+            }
+            ',' => {
+                self.single_char_token(TokenType::Comma, ",", start_line, start_column, start_pos)
+            }
+            ';' => self.single_char_token(
+                TokenType::Semicolon,
+                ";",
+                start_line,
+                start_column,
+                start_pos,
+            ),
+            ':' => {
+                self.single_char_token(TokenType::Colon, ":", start_line, start_column, start_pos)
+            }
+            '(' => self.single_char_token(
+                TokenType::LeftParen,
+                "(",
+                start_line,
+                start_column,
+                start_pos,
+            ),
+            ')' => self.single_char_token(
+                TokenType::RightParen,
+                ")",
+                start_line,
+                start_column,
+                start_pos,
+            ),
+            '[' => self.single_char_token(
+                TokenType::LeftBracket,
+                "[",
+                start_line,
+                start_column,
+                start_pos,
+            ),
+            ']' => self.single_char_token(
+                TokenType::RightBracket,
+                "]",
+                start_line,
+                start_column,
+                start_pos,
+            ),
 
             // Identifiers and keywords
             ch if ch.is_ascii_alphabetic() || ch == '_' || ch == '-' => {
@@ -174,7 +254,7 @@ impl<'a> FreeFormatLexer<'a> {
 
             // Whitespace (should be skipped, but we're here as fallback)
             ' ' | '\t' | '\r' => return Ok(None),
-            
+
             // Newlines are handled in skip_whitespace
             '\n' => return Ok(None),
 
@@ -191,7 +271,12 @@ impl<'a> FreeFormatLexer<'a> {
         Ok(Some(token))
     }
 
-    fn tokenize_comment(&mut self, start_line: usize, start_column: usize, start_pos: usize) -> LexResult<Token> {
+    fn tokenize_comment(
+        &mut self,
+        start_line: usize,
+        start_column: usize,
+        start_pos: usize,
+    ) -> LexResult<Token> {
         let _comment = String::from("*>");
         let mut content = String::new();
 
@@ -212,7 +297,12 @@ impl<'a> FreeFormatLexer<'a> {
         ))
     }
 
-    fn tokenize_line_comment(&mut self, start_line: usize, start_column: usize, start_pos: usize) -> LexResult<Token> {
+    fn tokenize_line_comment(
+        &mut self,
+        start_line: usize,
+        start_column: usize,
+        start_pos: usize,
+    ) -> LexResult<Token> {
         let mut content = String::new();
 
         while let Some(ch) = self.next_char() {
@@ -232,7 +322,13 @@ impl<'a> FreeFormatLexer<'a> {
         ))
     }
 
-    fn tokenize_string(&mut self, quote: char, start_line: usize, start_column: usize, start_pos: usize) -> LexResult<Token> {
+    fn tokenize_string(
+        &mut self,
+        quote: char,
+        start_line: usize,
+        start_column: usize,
+        start_pos: usize,
+    ) -> LexResult<Token> {
         let mut value = String::new();
         let mut lexeme = String::from(quote);
         let mut terminated = false;
@@ -243,7 +339,12 @@ impl<'a> FreeFormatLexer<'a> {
                     // Escaped quote
                     let escaped = match self.next_char() {
                         Some(ch) => ch,
-                        None => return Err(LexError::UnterminatedString { line: self.line, column: self.column }),
+                        None => {
+                            return Err(LexError::UnterminatedString {
+                                line: self.line,
+                                column: self.column,
+                            })
+                        }
                     };
                     value.push(escaped);
                     lexeme.push('\\');
@@ -284,7 +385,13 @@ impl<'a> FreeFormatLexer<'a> {
         ))
     }
 
-    fn tokenize_number(&mut self, first: char, start_line: usize, start_column: usize, start_pos: usize) -> LexResult<Token> {
+    fn tokenize_number(
+        &mut self,
+        first: char,
+        start_line: usize,
+        start_column: usize,
+        start_pos: usize,
+    ) -> LexResult<Token> {
         let mut value = String::from(first);
         let mut has_decimal = false;
 
@@ -327,7 +434,13 @@ impl<'a> FreeFormatLexer<'a> {
         ))
     }
 
-    fn tokenize_identifier_or_keyword(&mut self, first: char, start_line: usize, start_column: usize, start_pos: usize) -> LexResult<Token> {
+    fn tokenize_identifier_or_keyword(
+        &mut self,
+        first: char,
+        start_line: usize,
+        start_column: usize,
+        start_pos: usize,
+    ) -> LexResult<Token> {
         let mut value = String::from(first);
 
         while let Some(ch) = self.peek_char() {
@@ -361,7 +474,14 @@ impl<'a> FreeFormatLexer<'a> {
         }
     }
 
-    fn single_char_token(&self, token_type: TokenType, lexeme: &str, line: usize, column: usize, start: usize) -> Token {
+    fn single_char_token(
+        &self,
+        token_type: TokenType,
+        lexeme: &str,
+        line: usize,
+        column: usize,
+        start: usize,
+    ) -> Token {
         Token::new(
             token_type,
             lexeme.to_string(),
@@ -372,7 +492,14 @@ impl<'a> FreeFormatLexer<'a> {
         )
     }
 
-    fn two_char_token(&self, token_type: TokenType, lexeme: &str, line: usize, column: usize, start: usize) -> Token {
+    fn two_char_token(
+        &self,
+        token_type: TokenType,
+        lexeme: &str,
+        line: usize,
+        column: usize,
+        start: usize,
+    ) -> Token {
         Token::new(
             token_type,
             lexeme.to_string(),

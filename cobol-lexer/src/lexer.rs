@@ -8,7 +8,7 @@ use crate::token::Token;
 pub enum Format {
     /// Fixed-format COBOL (columns 1-6 sequence, 7 indicator, 8-72 code)
     FixedFormat,
-    
+
     /// Free-format COBOL (no column restrictions)
     FreeFormat,
 }
@@ -57,13 +57,13 @@ pub fn tokenize(source: &str, format: Format) -> LexResult<Vec<Token>> {
 pub fn detect_format(source: &str) -> Format {
     let lines: Vec<&str> = source.lines().collect();
     let mut fixed_format_indicators = 0;
-    
+
     for line in lines.iter().take(10) {
         // Skip empty lines
         if line.trim().is_empty() {
             continue;
         }
-        
+
         // Check for sequence numbers in columns 1-6 (usually numeric)
         if line.len() >= 6 {
             let seq_area = &line[0..6];
@@ -71,7 +71,7 @@ pub fn detect_format(source: &str) -> Format {
                 fixed_format_indicators += 1;
             }
         }
-        
+
         // Check for indicator in column 7
         if line.len() >= 7 {
             let indicator = line.chars().nth(6).unwrap();
@@ -79,7 +79,7 @@ pub fn detect_format(source: &str) -> Format {
                 fixed_format_indicators += 1;
             }
         }
-        
+
         // Check if code starts at column 8
         if line.len() >= 8 {
             let col8 = line.chars().nth(7).unwrap();
@@ -88,7 +88,7 @@ pub fn detect_format(source: &str) -> Format {
             }
         }
     }
-    
+
     // If we have strong indicators, assume fixed format
     if fixed_format_indicators >= 5 {
         Format::FixedFormat

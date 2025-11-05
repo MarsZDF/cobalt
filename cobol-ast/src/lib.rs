@@ -47,9 +47,9 @@ pub use expression::{BinaryOp, Expression, UnaryOp};
 pub use literal::{Literal, NumericLiteral};
 pub use program::{
     ConfigurationSection, DataDivision, EnvironmentDivision, FileControl, FileDescription,
-    FileEntry, FileSection, IdentificationDivision, InputOutputSection, IoControl,
-    LinkageSection, LocalStorageSection, Paragraph, ProcedureDivision, Program, Section,
-    SpecialName, WorkingStorageSection,
+    FileEntry, FileSection, IdentificationDivision, InputOutputSection, IoControl, LinkageSection,
+    LocalStorageSection, Paragraph, ProcedureDivision, Program, Section, SpecialName,
+    WorkingStorageSection,
 };
 pub use span::{Span, Spanned};
 pub use statement::{

@@ -4,19 +4,19 @@
 pub struct Span {
     /// Starting line number (1-indexed)
     pub start_line: usize,
-    
+
     /// Starting column number (1-indexed)
     pub start_column: usize,
-    
+
     /// Ending line number (1-indexed)
     pub end_line: usize,
-    
+
     /// Ending column number (1-indexed)
     pub end_column: usize,
-    
+
     /// Byte offset of start (0-indexed)
     pub start_byte: usize,
-    
+
     /// Byte offset of end (0-indexed)
     pub end_byte: usize,
 }
@@ -40,7 +40,7 @@ impl Span {
             end_byte,
         }
     }
-    
+
     /// Create a span from token positions (start and end tokens).
     pub fn from_tokens(start_pos: (usize, usize, usize), end_pos: (usize, usize, usize)) -> Self {
         Self {
@@ -52,7 +52,7 @@ impl Span {
             end_byte: end_pos.2,
         }
     }
-    
+
     /// Merge two spans (creates a span that encompasses both).
     pub fn merge(self, other: Span) -> Self {
         Self {

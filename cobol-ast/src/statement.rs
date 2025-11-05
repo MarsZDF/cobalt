@@ -1,6 +1,6 @@
-use crate::span::Spanned;
 use crate::expression::Expression;
 use crate::literal::Literal;
+use crate::span::Spanned;
 
 /// Procedure division statement.
 #[derive(Debug, Clone, PartialEq)]
@@ -177,7 +177,7 @@ pub enum ExitStatement {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub enum StopStatement {
-    Run, // STOP RUN
+    Run,                      // STOP RUN
     Literal(Option<Literal>), // STOP literal
 }
 
@@ -227,9 +227,12 @@ pub struct WhenClause {
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub enum WhenCondition {
     Value(Spanned<Expression>),
-    Range { from: Spanned<Expression>, to: Spanned<Expression> },
-    Any, // ANY keyword
-    True, // TRUE keyword  
+    Range {
+        from: Spanned<Expression>,
+        to: Spanned<Expression>,
+    },
+    Any,   // ANY keyword
+    True,  // TRUE keyword
     False, // FALSE keyword
 }
 

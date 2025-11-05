@@ -1,7 +1,7 @@
 use crate::models::*;
+use anyhow::Result;
 use cobol_ast::Program;
 use std::collections::HashMap;
-use anyhow::Result;
 
 /// Analyzes COBOL AST to extract documentation information.
 pub struct CobolAnalyzer {
@@ -52,14 +52,23 @@ impl CobolAnalyzer {
 
     fn analyze_program_summary(&self, program: &Program) -> ProgramSummary {
         ProgramSummary {
-            program_id: program.identification.node.program_id.clone().unwrap_or_else(|| "UNKNOWN".to_string()),
+            program_id: program
+                .identification
+                .node
+                .program_id
+                .clone()
+                .unwrap_or_else(|| "UNKNOWN".to_string()),
             author: program.identification.node.author.clone(),
             date_written: program.identification.node.date_written.clone(),
             date_compiled: program.identification.node.date_compiled.clone(),
             purpose: None,
             remarks: program.identification.node.remarks.clone(),
             total_lines: 100, // Simplified
-            divisions: vec!["IDENTIFICATION".to_string(), "DATA".to_string(), "PROCEDURE".to_string()],
+            divisions: vec![
+                "IDENTIFICATION".to_string(),
+                "DATA".to_string(),
+                "PROCEDURE".to_string(),
+            ],
             called_programs: Vec::new(),
             input_files: Vec::new(),
             output_files: Vec::new(),
@@ -68,7 +77,7 @@ impl CobolAnalyzer {
 
     fn analyze_data_structures(&self, program: &Program) -> Vec<DataStructure> {
         let mut data_structures = Vec::new();
-        
+
         if let Some(data_div) = &program.data {
             if let Some(ws) = &data_div.node.working_storage_section {
                 for item in &ws.node.data_items {
@@ -87,7 +96,7 @@ impl CobolAnalyzer {
                 }
             }
         }
-        
+
         data_structures
     }
 

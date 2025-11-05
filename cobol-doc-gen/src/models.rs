@@ -156,4 +156,3 @@ pub struct ComplexityMetrics {
     pub maintainability_index: f64,
     pub technical_debt_minutes: f64,
 }
-

@@ -43,7 +43,7 @@ pub enum TokenType {
     Thru,
     ThruEnd,
     EndPerform,
-    
+
     // Data definition keywords
     Picture,
     Pic,
@@ -62,17 +62,17 @@ pub enum TokenType {
     Left,
     Blank,
     Zero,
-    
+
     // Arithmetic statements
     Add,
     Subtract,
-    MultiplyOp,  // Different from Multiply token type above
-    DivideOp,    // Different from Divide token type above
+    MultiplyOp, // Different from Multiply token type above
+    DivideOp,   // Different from Divide token type above
     On,
     Size,
     Error,
-    Not,  // NOT operator/keyword
-    
+    Not, // NOT operator/keyword
+
     // Control flow
     Evaluate,
     When,
@@ -81,7 +81,7 @@ pub enum TokenType {
     Continue,
     Next,
     Sentence,
-    
+
     // File operations
     Open,
     Close,
@@ -95,9 +95,9 @@ pub enum TokenType {
     Output,
     InputOutput,
     Extend,
-    
+
     // String operations
-    StringStmt,  // STRING statement (different from String literal)
+    StringStmt, // STRING statement (different from String literal)
     Unstring,
     Inspect,
     Tallying,
@@ -107,7 +107,7 @@ pub enum TokenType {
     Leading,
     First,
     Initial,
-    
+
     // Other statements
     Initialize,
     Set,
@@ -118,7 +118,7 @@ pub enum TokenType {
     Generate,
     Transform,
     Validate,
-    
+
     // Conditions and qualifiers
     Equal,
     Greater,
@@ -130,11 +130,11 @@ pub enum TokenType {
     HighValue,
     LowValue,
     Quote,
-    
+
     // Logical operators (already have these as operators, but also as keywords)
     AndOp,
     OrOp,
-    
+
     // Other keywords
     Of,
     In,
@@ -145,49 +145,49 @@ pub enum TokenType {
     EndData,
     EndEnvironment,
     EndProcedure,
-    
+
     // Operators
-    Equals,           // =
-    NotEquals,        // <> or !=
-    LessThan,         // <
-    GreaterThan,      // >
-    LessOrEqual,      // <=
-    GreaterOrEqual,   // >=
-    Plus,             // +
-    Minus,            // -
-    Multiply,         // *
-    Divide,           // /
-    Power,            // **
-    
+    Equals,         // =
+    NotEquals,      // <> or !=
+    LessThan,       // <
+    GreaterThan,    // >
+    LessOrEqual,    // <=
+    GreaterOrEqual, // >=
+    Plus,           // +
+    Minus,          // -
+    Multiply,       // *
+    Divide,         // /
+    Power,          // **
+
     // Punctuation
-    Period,           // .
-    Comma,            // ,
-    Semicolon,        // ;
-    Colon,            // :
-    LeftParen,        // (
-    RightParen,       // )
-    LeftBracket,      // [
-    RightBracket,     // ]
-    
+    Period,       // .
+    Comma,        // ,
+    Semicolon,    // ;
+    Colon,        // :
+    LeftParen,    // (
+    RightParen,   // )
+    LeftBracket,  // [
+    RightBracket, // ]
+
     // Literals
-    StringLiteral(String),    // "text" or 'text'
-    NumericLiteral(String),   // 123, 123.45, -123, +123
-    
+    StringLiteral(String),  // "text" or 'text'
+    NumericLiteral(String), // 123, 123.45, -123, +123
+
     // Identifiers
     Identifier(String),
-    
+
     // Special COBOL constructs
-    LevelNumber(u8),          // 01-49, 66, 77, 88
-    
+    LevelNumber(u8), // 01-49, 66, 77, 88
+
     // Comments
     Comment(String),
-    
+
     // Whitespace (optionally preserved)
     Whitespace(String),
-    
+
     // End of file
     Eof,
-    
+
     // Unknown/error token
     Unknown(char),
 }
@@ -197,19 +197,19 @@ pub enum TokenType {
 pub struct Token {
     /// The type of token
     pub token_type: TokenType,
-    
+
     /// The actual text that was tokenized
     pub lexeme: String,
-    
+
     /// Line number (1-indexed)
     pub line: usize,
-    
+
     /// Column number (1-indexed)
     pub column: usize,
-    
+
     /// Byte offset in the source string (0-indexed)
     pub start: usize,
-    
+
     /// Byte offset of the end of the token (0-indexed)
     pub end: usize,
 }
@@ -233,12 +233,12 @@ impl Token {
             end,
         }
     }
-    
+
     /// Get the span as a tuple (start, end).
     pub fn span(&self) -> (usize, usize) {
         (self.start, self.end)
     }
-    
+
     /// Check if this token is a keyword.
     pub fn is_keyword(&self) -> bool {
         matches!(
@@ -259,7 +259,7 @@ impl Token {
                 | TokenType::Display
         )
     }
-    
+
     /// Check if this token is whitespace or a comment.
     pub fn is_trivial(&self) -> bool {
         matches!(

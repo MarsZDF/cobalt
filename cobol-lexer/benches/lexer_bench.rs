@@ -1,5 +1,5 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use cobol_lexer::{tokenize, Format};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn bench_small_program(c: &mut Criterion) {
     let source = r#"

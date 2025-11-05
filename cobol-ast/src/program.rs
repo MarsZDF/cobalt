@@ -1,5 +1,5 @@
-use crate::span::Spanned;
 use crate::data::DataItem;
+use crate::span::Spanned;
 use crate::statement::Statement;
 
 /// Complete COBOL program.

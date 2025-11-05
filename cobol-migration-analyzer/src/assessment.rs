@@ -27,19 +27,22 @@ impl MigrationAssessment {
     pub fn microservices_readiness_score(&self) -> f64 {
         let service_count = self.microservices_analysis.recommended_services.len();
         let dependency_complexity = self.microservices_analysis.service_dependencies.len() as f64;
-        let consistency_challenges = self.microservices_analysis.data_consistency_challenges.len() as f64;
+        let consistency_challenges = self
+            .microservices_analysis
+            .data_consistency_challenges
+            .len() as f64;
 
         // Higher service count is good, but too many dependencies and consistency issues are bad
         let base_score = (service_count as f64 * 10.0).min(100.0);
         let penalty = (dependency_complexity + consistency_challenges * 2.0) * 5.0;
-        
+
         (base_score - penalty).max(0.0)
     }
 
     /// Calculate effort favorability score (lower effort = higher score).
     pub fn effort_favorability_score(&self) -> f64 {
         let effort_months = self.effort_estimation.total_effort_months;
-        
+
         // Convert effort to favorability score (inverse relationship)
         match effort_months {
             0.0..=6.0 => 100.0,
@@ -94,7 +97,8 @@ impl MigrationAssessment {
 
     /// Get technical debt hotspots sorted by severity.
     pub fn worst_technical_debt_hotspots(&self) -> Vec<&TechnicalDebtHotspot> {
-        let mut hotspots: Vec<&TechnicalDebtHotspot> = self.technical_debt.hotspots.iter().collect();
+        let mut hotspots: Vec<&TechnicalDebtHotspot> =
+            self.technical_debt.hotspots.iter().collect();
         hotspots.sort_by(|a, b| b.debt_score.partial_cmp(&a.debt_score).unwrap());
         hotspots
     }
@@ -102,16 +106,22 @@ impl MigrationAssessment {
     /// Check if the system is ready for cloud migration.
     pub fn is_cloud_ready(&self) -> bool {
         self.cloud_readiness.overall_score >= 70.0
-            && self.cloud_readiness.blockers.iter().all(|b| {
-                !matches!(b.severity, Severity::Critical)
-            })
+            && self
+                .cloud_readiness
+                .blockers
+                .iter()
+                .all(|b| !matches!(b.severity, Severity::Critical))
     }
 
     /// Check if the system is suitable for microservices architecture.
     pub fn is_microservices_suitable(&self) -> bool {
         !self.microservices_analysis.recommended_services.is_empty()
             && self.microservices_analysis.recommended_services.len() >= 2
-            && self.microservices_analysis.data_consistency_challenges.len() <= 3
+            && self
+                .microservices_analysis
+                .data_consistency_challenges
+                .len()
+                <= 3
     }
 
     /// Get a migration readiness report as text.
@@ -193,7 +203,9 @@ impl MigrationAssessment {
 
         match (readiness, risk, effort) {
             (80.0..=100.0, RiskLevel::Low, 0.0..=12.0) => MigrationRecommendation::Proceed,
-            (60.0..=79.9, RiskLevel::Low | RiskLevel::Medium, 0.0..=24.0) => MigrationRecommendation::ProceedWithPrep,
+            (60.0..=79.9, RiskLevel::Low | RiskLevel::Medium, 0.0..=24.0) => {
+                MigrationRecommendation::ProceedWithPrep
+            }
             (40.0..=59.9, _, _) => MigrationRecommendation::ExtensivePrep,
             (_, RiskLevel::Critical, _) => MigrationRecommendation::NotRecommended,
             (_, _, 48.0..) => MigrationRecommendation::ReconsiderScope,

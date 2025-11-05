@@ -1,4 +1,4 @@
-use cobol_lexer::{tokenize, detect_format, Format, TokenType};
+use cobol_lexer::{detect_format, tokenize, Format, TokenType};
 
 fn main() {
     // Example COBOL program
@@ -19,19 +19,22 @@ fn main() {
     match tokenize(source, Format::FreeFormat) {
         Ok(tokens) => {
             println!("Tokenized {} tokens:\n", tokens.len());
-            
+
             for (i, token) in tokens.iter().enumerate() {
                 // Skip trivial tokens (whitespace, comments) for cleaner output
                 if token.is_trivial() {
                     continue;
                 }
-                
+
                 println!(
                     "Token {}: {:?} at line {}, column {}",
-                    i + 1, token.token_type, token.line, token.column
+                    i + 1,
+                    token.token_type,
+                    token.line,
+                    token.column
                 );
                 println!("  Lexeme: {:?}", token.lexeme);
-                
+
                 // Show some specific token type examples
                 match &token.token_type {
                     TokenType::StringLiteral(s) => {
@@ -50,13 +53,14 @@ fn main() {
                 }
                 println!();
             }
-            
+
             // Count tokens by type
             let keyword_count = tokens.iter().filter(|t| t.is_keyword()).count();
-            let identifier_count = tokens.iter()
+            let identifier_count = tokens
+                .iter()
                 .filter(|t| matches!(t.token_type, TokenType::Identifier(_)))
                 .count();
-            
+
             println!("\nSummary:");
             println!("  Keywords: {}", keyword_count);
             println!("  Identifiers: {}", identifier_count);

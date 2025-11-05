@@ -1,8 +1,8 @@
-use crate::models::*;
 use crate::assessment::MigrationAssessment;
 use crate::cloud_readiness::CloudReadinessAnalyzer;
-use crate::microservices::MicroservicesAnalyzer;
 use crate::effort_estimation::EffortEstimator;
+use crate::microservices::MicroservicesAnalyzer;
+use crate::models::*;
 use crate::recommendations::RecommendationEngine;
 use anyhow::Result;
 use chrono::Utc;
@@ -57,10 +57,7 @@ impl Default for AnalysisConfig {
             include_technical_debt: true,
             target_cloud_platform: CloudPlatform::AWS,
             migration_strategy: MigrationStrategy::Replatform,
-            business_priorities: vec![
-                BusinessPriority::CostReduction,
-                BusinessPriority::Agility,
-            ],
+            business_priorities: vec![BusinessPriority::CostReduction, BusinessPriority::Agility],
         }
     }
 }
@@ -130,7 +127,8 @@ impl MigrationAnalyzer {
 
         // Step 4: Estimate migration effort
         let effort_estimation = if self.config.include_effort_estimation {
-            self.effort_estimator.estimate(programs, &microservices_analysis)?
+            self.effort_estimator
+                .estimate(programs, &microservices_analysis)?
         } else {
             EffortEstimation {
                 total_effort_months: 0.0,
@@ -160,7 +158,8 @@ impl MigrationAnalyzer {
         };
 
         // Step 5: Assess risks
-        let risk_assessment = self.assess_risks(programs, &cloud_readiness, &microservices_analysis)?;
+        let risk_assessment =
+            self.assess_risks(programs, &cloud_readiness, &microservices_analysis)?;
 
         // Step 6: Generate recommendations
         let recommendations = self.recommendation_engine.generate_recommendations(
@@ -205,7 +204,8 @@ impl MigrationAnalyzer {
 
     fn extract_system_overview(&self, programs: &[&Program]) -> Result<SystemOverview> {
         let total_programs = programs.len();
-        let total_lines_of_code = programs.iter()
+        let total_lines_of_code = programs
+            .iter()
             .map(|p| self.estimate_lines_of_code(p))
             .sum();
 
@@ -232,7 +232,8 @@ impl MigrationAnalyzer {
     ) -> Result<RiskAssessment> {
         let technical_risks = self.identify_technical_risks(programs, cloud_readiness)?;
         let business_risks = self.identify_business_risks(programs, microservices_analysis)?;
-        let mitigation_strategies = self.develop_mitigation_strategies(&technical_risks, &business_risks)?;
+        let mitigation_strategies =
+            self.develop_mitigation_strategies(&technical_risks, &business_risks)?;
 
         let overall_risk = self.calculate_overall_risk(&technical_risks, &business_risks);
 
@@ -275,7 +276,12 @@ impl MigrationAnalyzer {
 
             if program_debt > 70.0 {
                 hotspots.push(TechnicalDebtHotspot {
-                    program_name: program.identification.node.program_id.clone().unwrap_or_else(|| "UNKNOWN".to_string()),
+                    program_name: program
+                        .identification
+                        .node
+                        .program_id
+                        .clone()
+                        .unwrap_or_else(|| "UNKNOWN".to_string()),
                     debt_score: program_debt,
                     issues: self.identify_debt_issues(program),
                     refactoring_priority: self.determine_refactoring_priority(program_debt),
@@ -321,20 +327,23 @@ impl MigrationAnalyzer {
     fn estimate_lines_of_code(&self, program: &Program) -> usize {
         // Count statements in the procedure division as a proxy for LOC
         let mut lines = 10; // Base lines for divisions
-        
+
         if let Some(env) = &program.environment {
             lines += 5; // Environment division
         }
-        
+
         if let Some(data) = &program.data {
             lines += 20; // Data division
         }
-        
+
         lines += program.procedure.node.statements.len() * 2; // Estimate 2 lines per statement
         lines
     }
-    
-    fn identify_programming_patterns(&self, _programs: &[&Program]) -> Result<Vec<ProgrammingPattern>> {
+
+    fn identify_programming_patterns(
+        &self,
+        _programs: &[&Program],
+    ) -> Result<Vec<ProgrammingPattern>> {
         Ok(vec![
             ProgrammingPattern {
                 pattern_type: "Sequential Processing".to_string(),
@@ -355,59 +364,74 @@ impl MigrationAnalyzer {
         Ok(Vec::new())
     }
 
-    fn identify_external_interfaces(&self, _programs: &[&Program]) -> Result<Vec<ExternalInterface>> {
+    fn identify_external_interfaces(
+        &self,
+        _programs: &[&Program],
+    ) -> Result<Vec<ExternalInterface>> {
         Ok(Vec::new())
     }
 
     fn identify_business_domains(&self, _programs: &[&Program]) -> Result<Vec<BusinessDomain>> {
-        Ok(vec![
-            BusinessDomain {
-                name: "Customer Management".to_string(),
-                programs: vec!["CUSTMGMT".to_string(), "CUSTVAL".to_string()],
-                cohesion_score: 0.8,
-                coupling_score: 0.3,
-                microservice_candidate: true,
-            },
-        ])
+        Ok(vec![BusinessDomain {
+            name: "Customer Management".to_string(),
+            programs: vec!["CUSTMGMT".to_string(), "CUSTVAL".to_string()],
+            cohesion_score: 0.8,
+            coupling_score: 0.3,
+            microservice_candidate: true,
+        }])
     }
 
-    fn identify_technical_risks(&self, _programs: &[&Program], _cloud_readiness: &CloudReadinessScore) -> Result<Vec<TechnicalRisk>> {
-        Ok(vec![
-            TechnicalRisk {
-                description: "Legacy data format dependencies".to_string(),
-                probability: Probability::High,
-                impact: Impact::High,
-                risk_score: 8.0,
-                mitigation_actions: vec![
-                    "Implement data transformation layer".to_string(),
-                    "Create data format adapters".to_string(),
-                ],
-            },
-        ])
+    fn identify_technical_risks(
+        &self,
+        _programs: &[&Program],
+        _cloud_readiness: &CloudReadinessScore,
+    ) -> Result<Vec<TechnicalRisk>> {
+        Ok(vec![TechnicalRisk {
+            description: "Legacy data format dependencies".to_string(),
+            probability: Probability::High,
+            impact: Impact::High,
+            risk_score: 8.0,
+            mitigation_actions: vec![
+                "Implement data transformation layer".to_string(),
+                "Create data format adapters".to_string(),
+            ],
+        }])
     }
 
-    fn identify_business_risks(&self, _programs: &[&Program], _microservices: &MicroservicesAnalysis) -> Result<Vec<BusinessRisk>> {
-        Ok(vec![
-            BusinessRisk {
-                description: "Business continuity during migration".to_string(),
-                probability: Probability::Medium,
-                business_impact: Impact::VeryHigh,
-                risk_score: 7.5,
-                mitigation_actions: vec![
-                    "Implement parallel run strategy".to_string(),
-                    "Create comprehensive rollback plan".to_string(),
-                ],
-            },
-        ])
+    fn identify_business_risks(
+        &self,
+        _programs: &[&Program],
+        _microservices: &MicroservicesAnalysis,
+    ) -> Result<Vec<BusinessRisk>> {
+        Ok(vec![BusinessRisk {
+            description: "Business continuity during migration".to_string(),
+            probability: Probability::Medium,
+            business_impact: Impact::VeryHigh,
+            risk_score: 7.5,
+            mitigation_actions: vec![
+                "Implement parallel run strategy".to_string(),
+                "Create comprehensive rollback plan".to_string(),
+            ],
+        }])
     }
 
-    fn develop_mitigation_strategies(&self, _technical_risks: &[TechnicalRisk], _business_risks: &[BusinessRisk]) -> Result<Vec<MitigationStrategy>> {
+    fn develop_mitigation_strategies(
+        &self,
+        _technical_risks: &[TechnicalRisk],
+        _business_risks: &[BusinessRisk],
+    ) -> Result<Vec<MitigationStrategy>> {
         Ok(Vec::new())
     }
 
-    fn calculate_overall_risk(&self, technical_risks: &[TechnicalRisk], business_risks: &[BusinessRisk]) -> RiskLevel {
-        let avg_technical_risk = technical_risks.iter().map(|r| r.risk_score).sum::<f64>() / technical_risks.len() as f64;
-        let avg_business_risk = business_risks.iter().map(|r| r.risk_score).sum::<f64>() / business_risks.len() as f64;
+    fn calculate_overall_risk(
+        &self,
+        technical_risks: &[TechnicalRisk],
+        business_risks: &[BusinessRisk],
+    ) -> RiskLevel {
+        let avg_technical_risk = technical_risks.iter().map(|r| r.risk_score).sum::<f64>()
+            / technical_risks.len() as f64;
+        let avg_business_risk =
+            business_risks.iter().map(|r| r.risk_score).sum::<f64>() / business_risks.len() as f64;
         let overall = (avg_technical_risk + avg_business_risk) / 2.0;
 
         match overall {
@@ -418,27 +442,32 @@ impl MigrationAnalyzer {
         }
     }
 
-    fn create_roadmap_phases(&self, _microservices: &MicroservicesAnalysis, _effort: &EffortEstimation) -> Result<Vec<RoadmapPhase>> {
-        Ok(vec![
-            RoadmapPhase {
-                phase_number: 1,
-                name: "Assessment and Planning".to_string(),
-                description: "Detailed analysis and migration planning".to_string(),
-                start_month: 1,
-                duration_months: 3,
-                deliverables: vec![
-                    "Migration strategy document".to_string(),
-                    "Technical architecture design".to_string(),
-                ],
-                success_metrics: vec![
-                    "All technical risks identified".to_string(),
-                    "Team training completed".to_string(),
-                ],
-            },
-        ])
+    fn create_roadmap_phases(
+        &self,
+        _microservices: &MicroservicesAnalysis,
+        _effort: &EffortEstimation,
+    ) -> Result<Vec<RoadmapPhase>> {
+        Ok(vec![RoadmapPhase {
+            phase_number: 1,
+            name: "Assessment and Planning".to_string(),
+            description: "Detailed analysis and migration planning".to_string(),
+            start_month: 1,
+            duration_months: 3,
+            deliverables: vec![
+                "Migration strategy document".to_string(),
+                "Technical architecture design".to_string(),
+            ],
+            success_metrics: vec![
+                "All technical risks identified".to_string(),
+                "Team training completed".to_string(),
+            ],
+        }])
     }
 
-    fn identify_phase_dependencies(&self, _phases: &[RoadmapPhase]) -> Result<Vec<PhaseDependency>> {
+    fn identify_phase_dependencies(
+        &self,
+        _phases: &[RoadmapPhase],
+    ) -> Result<Vec<PhaseDependency>> {
         Ok(Vec::new())
     }
 
@@ -446,37 +475,55 @@ impl MigrationAnalyzer {
         Ok(Vec::new())
     }
 
-    fn define_success_criteria(&self, _recommendations: &[Recommendation]) -> Result<Vec<SuccessCriterion>> {
+    fn define_success_criteria(
+        &self,
+        _recommendations: &[Recommendation],
+    ) -> Result<Vec<SuccessCriterion>> {
         Ok(Vec::new())
     }
 
     fn calculate_program_debt_score(&self, program: &Program) -> f64 {
         let mut debt_score: f32 = 0.0;
-        
+
         // Check for program metadata completeness
         let id_div = &program.identification.node;
-        if id_div.author.is_none() { debt_score += 10.0; }
-        if id_div.date_written.is_none() { debt_score += 5.0; }
-        if id_div.remarks.is_none() { debt_score += 5.0; }
-        
+        if id_div.author.is_none() {
+            debt_score += 10.0;
+        }
+        if id_div.date_written.is_none() {
+            debt_score += 5.0;
+        }
+        if id_div.remarks.is_none() {
+            debt_score += 5.0;
+        }
+
         // Check for missing divisions
-        if program.environment.is_none() { debt_score += 15.0; }
-        if program.data.is_none() { debt_score += 20.0; }
-        
+        if program.environment.is_none() {
+            debt_score += 15.0;
+        }
+        if program.data.is_none() {
+            debt_score += 20.0;
+        }
+
         // Check complexity based on statement count
         let statement_count = program.procedure.node.statements.len();
-        if statement_count > 100 { debt_score += 20.0; }
-        else if statement_count > 50 { debt_score += 10.0; }
-        
+        if statement_count > 100 {
+            debt_score += 20.0;
+        } else if statement_count > 50 {
+            debt_score += 10.0;
+        }
+
         // Check for empty procedure division
-        if statement_count == 0 { debt_score += 25.0; }
-        
+        if statement_count == 0 {
+            debt_score += 25.0;
+        }
+
         debt_score.min(100.0).into()
     }
-    
+
     fn identify_debt_issues(&self, program: &Program) -> Vec<String> {
         let mut issues = Vec::new();
-        
+
         let id_div = &program.identification.node;
         if id_div.author.is_none() {
             issues.push("Missing author information".to_string());
@@ -487,14 +534,14 @@ impl MigrationAnalyzer {
         if id_div.remarks.is_none() {
             issues.push("Missing program documentation".to_string());
         }
-        
+
         if program.environment.is_none() {
             issues.push("Missing environment division".to_string());
         }
         if program.data.is_none() {
             issues.push("Missing data division".to_string());
         }
-        
+
         let statement_count = program.procedure.node.statements.len();
         if statement_count > 100 {
             issues.push("High complexity - too many statements".to_string());
@@ -502,10 +549,10 @@ impl MigrationAnalyzer {
         if statement_count == 0 {
             issues.push("Empty procedure division".to_string());
         }
-        
+
         issues
     }
-    
+
     fn determine_refactoring_priority(&self, debt_score: f64) -> Priority {
         match debt_score {
             0.0..=40.0 => Priority::Low,
@@ -514,8 +561,11 @@ impl MigrationAnalyzer {
             _ => Priority::Critical,
         }
     }
-    
-    fn identify_refactoring_opportunities(&self, _programs: &[&Program]) -> Result<Vec<RefactoringOpportunity>> {
+
+    fn identify_refactoring_opportunities(
+        &self,
+        _programs: &[&Program],
+    ) -> Result<Vec<RefactoringOpportunity>> {
         Ok(Vec::new())
     }
 }

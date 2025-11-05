@@ -27,7 +27,9 @@ impl OutputFormat {
             OutputFormat::Markdown => "text/markdown",
             OutputFormat::Json => "application/json",
             OutputFormat::Pdf => "application/pdf",
-            OutputFormat::Word => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            OutputFormat::Word => {
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            }
         }
     }
 }

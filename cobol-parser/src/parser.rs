@@ -79,7 +79,7 @@ impl Parser {
             self.advance();
         }
 
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         Ok(Spanned::new(
             IdentificationDivision {
                 program_id,
@@ -114,7 +114,7 @@ impl Parser {
             self.advance();
         }
 
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         Ok(Some(Spanned::new(
             EnvironmentDivision {
                 configuration_section: None,
@@ -158,7 +158,7 @@ impl Parser {
                 }
             }
 
-            let ws_span = self.create_span(&ws_start, &self.previous_token().unwrap_or(&ws_start));
+            let ws_span = self.create_span(&ws_start, self.previous_token().unwrap_or(&ws_start));
             working_storage = Some(Spanned::new(
                 WorkingStorageSection { data_items },
                 ws_span,
@@ -170,7 +170,7 @@ impl Parser {
             self.advance();
         }
 
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         Ok(Some(Spanned::new(
             DataDivision {
                 file_section: None,
@@ -199,7 +199,7 @@ impl Parser {
             }
         }
 
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         Ok(Spanned::new(
             ProcedureDivision {
                 using: None,
@@ -288,7 +288,7 @@ impl Parser {
                             pic_string.push_str(s);
                             last_token = self.advance().unwrap();
                         }
-                        TokenType::Value | TokenType::Period if pic_string.len() > 0 => {
+                        TokenType::Value | TokenType::Period if !pic_string.is_empty() => {
                             break;
                         }
                         _ => break,
@@ -438,12 +438,12 @@ impl Parser {
         }
 
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
 
         Ok(Spanned::new(
             Statement::Display(Spanned::new(
                 DisplayStatement { operands },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -468,7 +468,7 @@ impl Parser {
         };
 
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
 
         Ok(Spanned::new(
             Statement::Accept(Spanned::new(
@@ -476,7 +476,7 @@ impl Parser {
                     identifier,
                     from: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -487,15 +487,15 @@ impl Parser {
         let start = self.consume_token(TokenType::Move)?;
         // Simplified - would parse full MOVE statement
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
 
         Ok(Spanned::new(
             Statement::Move(Spanned::new(
                 MoveStatement {
-                    from: Spanned::new(MoveSource::Literal(Literal::String(String::new())), span.clone()),
+                    from: Spanned::new(MoveSource::Literal(Literal::String(String::new())), span),
                     to: Vec::new(),
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -506,7 +506,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Compute)?;
         // Simplified - would parse full COMPUTE statement
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
 
         Ok(Spanned::new(
             Statement::Compute(Spanned::new(
@@ -514,10 +514,10 @@ impl Parser {
                     targets: Vec::new(),
                     expression: Spanned::new(
                         Expression::Literal(Literal::String(String::new())),
-                        span.clone(),
+                        span,
                     ),
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -528,19 +528,19 @@ impl Parser {
         let start = self.consume_token(TokenType::If)?;
         // Simplified - would parse full IF statement
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
 
         Ok(Spanned::new(
             Statement::If(Spanned::new(
                 IfStatement {
                     condition: Spanned::new(
                         Expression::Literal(Literal::Boolean(true)),
-                        span.clone(),
+                        span,
                     ),
                     then_statements: Vec::new(),
                     else_statements: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -556,10 +556,10 @@ impl Parser {
             StopStatement::Literal(None)
         };
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
 
         Ok(Spanned::new(
-            Statement::Stop(Spanned::new(stop_type, span.clone())),
+            Statement::Stop(Spanned::new(stop_type, span)),
             span,
         ))
     }
@@ -568,10 +568,10 @@ impl Parser {
     fn parse_exit_statement(&mut self) -> ParseResult<Spanned<Statement>> {
         let start = self.consume_token(TokenType::Exit)?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
 
         Ok(Spanned::new(
-            Statement::Exit(Spanned::new(ExitStatement::Program, span.clone())),
+            Statement::Exit(Spanned::new(ExitStatement::Program, span)),
             span,
         ))
     }
@@ -581,7 +581,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Return)?;
         // Simplified
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
 
         Ok(Spanned::new(
             Statement::Return(Spanned::new(
@@ -591,7 +591,7 @@ impl Parser {
                     at_end: None,
                     not_at_end: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -599,9 +599,9 @@ impl Parser {
 
     // Helper methods
 
-    fn check_token(&self, token_type: TokenType) -> bool {
+    fn check_token(&self, token_type: &TokenType) -> bool {
         if let Some(token) = self.peek() {
-            token.token_type == token_type
+            &token.token_type == token_type
         } else {
             false
         }
@@ -616,7 +616,7 @@ impl Parser {
     }
 
     fn consume_token(&mut self, token_type: TokenType) -> ParseResult<Token> {
-        if self.check_token(token_type.clone()) {
+        if self.check_token(&token_type) {
             self.advance().ok_or_else(|| ParseError::UnexpectedEof {
                 expected: vec![format!("{:?}", token_type)],
             })
@@ -686,18 +686,14 @@ impl Parser {
             return None;
         }
         let mut idx = self.current - 1;
-        loop {
-            if let Some(token) = self.tokens.get(idx) {
-                if !token.is_trivial() {
-                    return Some(token);
-                }
-                if idx == 0 {
-                    break;
-                }
-                idx -= 1;
-            } else {
+        while let Some(token) = self.tokens.get(idx) {
+            if !token.is_trivial() {
+                return Some(token);
+            }
+            if idx == 0 {
                 break;
             }
+            idx -= 1;
         }
         None
     }
@@ -742,10 +738,10 @@ impl Parser {
         }
         
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
-            Statement::Open(Spanned::new(OpenStatement { files }, span.clone())),
+            Statement::Open(Spanned::new(OpenStatement { files }, span)),
             span,
         ))
     }
@@ -754,7 +750,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Close)?;
         let file_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Close(Spanned::new(
@@ -771,7 +767,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Read)?;
         let file_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Read(Spanned::new(
@@ -795,7 +791,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Write)?;
         let record_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Write(Spanned::new(
@@ -818,7 +814,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Rewrite)?;
         let record_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Rewrite(Spanned::new(
@@ -838,7 +834,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Delete)?;
         let file_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Delete(Spanned::new(
@@ -859,7 +855,7 @@ impl Parser {
         let start = self.consume_token(TokenType::StringStmt)?;
         // Simplified implementation
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::String(Spanned::new(
@@ -880,7 +876,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Unstring)?;
         // Simplified implementation
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Unstring(Spanned::new(
@@ -903,7 +899,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Search)?;
         let table_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Search(Spanned::new(
@@ -923,7 +919,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Sort)?;
         let file_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Sort(Spanned::new(
@@ -945,7 +941,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Evaluate)?;
         // Simplified implementation
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Evaluate(Spanned::new(
@@ -964,7 +960,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Perform)?;
         let paragraph = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Perform(Box::new(Spanned::new(
@@ -979,7 +975,7 @@ impl Parser {
         let start = self.consume_token(TokenType::Call)?;
         let program_name = self.consume_identifier()?;
         self.consume_token(TokenType::Period)?;
-        let span = self.create_span(&start, &self.previous_token().unwrap_or(&start));
+        let span = self.create_span(&start, self.previous_token().unwrap_or(&start));
         
         Ok(Spanned::new(
             Statement::Call(Spanned::new(

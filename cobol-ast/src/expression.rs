@@ -7,35 +7,35 @@ use crate::span::Spanned;
 pub enum Expression {
     /// Literal value
     Literal(Literal),
-    
+
     /// Identifier (variable reference)
     Identifier(String),
-    
+
     /// Unary expression (-x, +x, NOT x)
     Unary {
         op: UnaryOp,
         operand: Box<Spanned<Expression>>,
     },
-    
+
     /// Binary expression (x + y, x AND y, etc.)
     Binary {
         op: BinaryOp,
         left: Box<Spanned<Expression>>,
         right: Box<Spanned<Expression>>,
     },
-    
+
     /// Function call
     FunctionCall {
         name: String,
         arguments: Vec<Spanned<Expression>>,
     },
-    
+
     /// Subscripted reference (array access)
     Subscripted {
         identifier: String,
         subscripts: Vec<Spanned<Expression>>,
     },
-    
+
     /// Qualified reference (identifier IN/OF identifier)
     Qualified {
         identifier: String,
@@ -47,9 +47,9 @@ pub enum Expression {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub enum UnaryOp {
-    Negate,    // -
-    Positive,  // +
-    Not,       // NOT
+    Negate,   // -
+    Positive, // +
+    Not,      // NOT
 }
 
 /// Binary operators.
@@ -62,7 +62,7 @@ pub enum BinaryOp {
     Multiply, // *
     Divide,   // /
     Power,    // **
-    
+
     // Comparison
     Equal,          // =
     NotEqual,       // <>
@@ -70,16 +70,16 @@ pub enum BinaryOp {
     GreaterThan,    // >
     LessOrEqual,    // <=
     GreaterOrEqual, // >=
-    
+
     // Logical
     And, // AND
     Or,  // OR
-    
+
     // String comparison
-    EqualToString,      // equal to (string)
-    NotEqualToString,   // not equal to (string)
-    LessThanString,     // less than (string)
-    GreaterThanString,  // greater than (string)
+    EqualToString,     // equal to (string)
+    NotEqualToString,  // not equal to (string)
+    LessThanString,    // less than (string)
+    GreaterThanString, // greater than (string)
 }
 
 impl BinaryOp {
@@ -87,10 +87,14 @@ impl BinaryOp {
     pub fn is_arithmetic(self) -> bool {
         matches!(
             self,
-            BinaryOp::Add | BinaryOp::Subtract | BinaryOp::Multiply | BinaryOp::Divide | BinaryOp::Power
+            BinaryOp::Add
+                | BinaryOp::Subtract
+                | BinaryOp::Multiply
+                | BinaryOp::Divide
+                | BinaryOp::Power
         )
     }
-    
+
     /// Check if this is a comparison operator.
     pub fn is_comparison(self) -> bool {
         matches!(
@@ -103,12 +107,12 @@ impl BinaryOp {
                 | BinaryOp::GreaterOrEqual
         )
     }
-    
+
     /// Check if this is a logical operator.
     pub fn is_logical(self) -> bool {
         matches!(self, BinaryOp::And | BinaryOp::Or)
     }
-    
+
     /// Check if this is a string comparison operator.
     pub fn is_string_comparison(self) -> bool {
         matches!(

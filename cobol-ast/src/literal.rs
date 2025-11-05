@@ -4,10 +4,10 @@
 pub enum Literal {
     /// String literal (quoted)
     String(String),
-    
+
     /// Numeric literal (integer or decimal)
     Numeric(NumericLiteral),
-    
+
     /// Boolean literal
     Boolean(bool),
 }
@@ -27,7 +27,7 @@ impl NumericLiteral {
             is_integer: true,
         }
     }
-    
+
     pub fn float(value: f64) -> Self {
         Self {
             value,

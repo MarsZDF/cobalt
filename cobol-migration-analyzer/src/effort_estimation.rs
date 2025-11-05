@@ -181,7 +181,10 @@ impl EffortEstimator {
         Ok(phases)
     }
 
-    fn calculate_resource_requirements(&self, phases: &[MigrationPhase]) -> Result<ResourceRequirements> {
+    fn calculate_resource_requirements(
+        &self,
+        phases: &[MigrationPhase],
+    ) -> Result<ResourceRequirements> {
         // Calculate peak resource requirements across all phases
         let max_duration = phases.iter().map(|p| p.duration_months).fold(0.0, f64::max);
         let complexity_factor = self.calculate_complexity_factor(phases);
@@ -208,7 +211,7 @@ impl EffortEstimator {
         resources: &ResourceRequirements,
     ) -> Result<CostEstimation> {
         let total_duration = phases.iter().map(|p| p.duration_months).sum::<f64>();
-        
+
         // Average salaries (monthly, fully loaded)
         let developer_cost_per_month = 12000.0;
         let architect_cost_per_month = 18000.0;
@@ -216,13 +219,12 @@ impl EffortEstimator {
         let analyst_cost_per_month = 10000.0;
         let tester_cost_per_month = 9000.0;
 
-        let development_cost = total_duration * (
-            resources.developers as f64 * developer_cost_per_month +
-            resources.architects as f64 * architect_cost_per_month +
-            resources.devops_engineers as f64 * devops_cost_per_month +
-            resources.business_analysts as f64 * analyst_cost_per_month +
-            resources.testers as f64 * tester_cost_per_month
-        );
+        let development_cost = total_duration
+            * (resources.developers as f64 * developer_cost_per_month
+                + resources.architects as f64 * architect_cost_per_month
+                + resources.devops_engineers as f64 * devops_cost_per_month
+                + resources.business_analysts as f64 * analyst_cost_per_month
+                + resources.testers as f64 * tester_cost_per_month);
 
         let infrastructure_cost = self.estimate_infrastructure_costs(total_duration);
         let training_cost = self.estimate_training_costs(resources);
@@ -255,16 +257,22 @@ impl EffortEstimator {
         }
 
         let critical_path = phases.iter().map(|p| p.name.clone()).collect();
-        
+
         let parallel_workstreams = vec![
             Workstream {
                 name: "Infrastructure Team".to_string(),
-                phases: vec!["Infrastructure Setup".to_string(), "Production Deployment".to_string()],
+                phases: vec![
+                    "Infrastructure Setup".to_string(),
+                    "Production Deployment".to_string(),
+                ],
                 team_size: 3,
             },
             Workstream {
                 name: "Development Team".to_string(),
-                phases: vec!["Core Services Migration".to_string(), "Testing and Validation".to_string()],
+                phases: vec![
+                    "Core Services Migration".to_string(),
+                    "Testing and Validation".to_string(),
+                ],
                 team_size: 6,
             },
             Workstream {
@@ -298,7 +306,10 @@ impl EffortEstimator {
         }
     }
 
-    fn estimate_core_services_duration(&self, microservices_analysis: &MicroservicesAnalysis) -> f64 {
+    fn estimate_core_services_duration(
+        &self,
+        microservices_analysis: &MicroservicesAnalysis,
+    ) -> f64 {
         let service_count = microservices_analysis.recommended_services.len();
         let complexity_factor = microservices_analysis.service_dependencies.len() as f64 * 0.5;
         (service_count as f64 * 1.5) + complexity_factor
@@ -316,7 +327,9 @@ impl EffortEstimator {
         base_duration + complexity_factor
     }
 
-    fn estimate_deployment_duration(&self) -> f64 { 1.0 }
+    fn estimate_deployment_duration(&self) -> f64 {
+        1.0
+    }
 
     fn calculate_complexity_factor(&self, phases: &[MigrationPhase]) -> f64 {
         let total_risks = phases.iter().map(|p| p.risks.len()).sum::<usize>();
@@ -329,14 +342,27 @@ impl EffortEstimator {
         base_developers + additional
     }
 
-    fn estimate_architects_needed(&self) -> usize { 2 }
-    fn estimate_devops_engineers_needed(&self) -> usize { 2 }
-    fn estimate_business_analysts_needed(&self) -> usize { 1 }
+    fn estimate_architects_needed(&self) -> usize {
+        2
+    }
+    fn estimate_devops_engineers_needed(&self) -> usize {
+        2
+    }
+    fn estimate_business_analysts_needed(&self) -> usize {
+        1
+    }
     fn estimate_testers_needed(&self, duration: f64) -> usize {
-        if duration > 12.0 { 3 } else { 2 }
+        if duration > 12.0 {
+            3
+        } else {
+            2
+        }
     }
 
-    fn create_core_services_deliverables(&self, microservices_analysis: &MicroservicesAnalysis) -> Vec<String> {
+    fn create_core_services_deliverables(
+        &self,
+        microservices_analysis: &MicroservicesAnalysis,
+    ) -> Vec<String> {
         let mut deliverables = vec![
             "Service architecture documentation".to_string(),
             "API specifications".to_string(),
@@ -357,9 +383,11 @@ impl EffortEstimator {
     }
 
     fn estimate_training_costs(&self, resources: &ResourceRequirements) -> f64 {
-        let total_people = resources.developers + resources.architects + 
-                          resources.devops_engineers + resources.business_analysts + 
-                          resources.testers;
+        let total_people = resources.developers
+            + resources.architects
+            + resources.devops_engineers
+            + resources.business_analysts
+            + resources.testers;
         total_people as f64 * 2000.0 // $2000 per person for training
     }
 

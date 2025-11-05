@@ -1,4 +1,4 @@
-use crate::analyzer::{CobolAnalyzer, AnalyzerConfig};
+use crate::analyzer::{AnalyzerConfig, CobolAnalyzer};
 use crate::formats::OutputFormat;
 use crate::models::Documentation;
 use crate::templates::TemplateEngine;
@@ -41,7 +41,7 @@ impl DocumentGenerator {
     pub fn new(config: GeneratorConfig) -> Self {
         let analyzer = CobolAnalyzer::new(config.analyzer_config.clone());
         let template_engine = TemplateEngine::new(config.template_dir.clone());
-        
+
         Self {
             config,
             analyzer,
@@ -71,7 +71,7 @@ impl DocumentGenerator {
         format: OutputFormat,
     ) -> Result<String> {
         let mut all_docs = Vec::new();
-        
+
         for program in programs {
             let doc = self.analyzer.analyze(program)?;
             all_docs.push(doc);
@@ -81,7 +81,10 @@ impl DocumentGenerator {
             OutputFormat::Html => self.generate_system_html(&all_docs),
             OutputFormat::Markdown => self.generate_system_markdown(&all_docs),
             OutputFormat::Json => self.generate_system_json(&all_docs),
-            _ => Err(anyhow::anyhow!("System documentation not supported for {}", format)),
+            _ => Err(anyhow::anyhow!(
+                "System documentation not supported for {}",
+                format
+            )),
         }
     }
 
@@ -106,14 +109,20 @@ impl DocumentGenerator {
         // 2. Use a PDF library (like wkhtmltopdf or headless Chrome) to convert
         // For now, return HTML with a note
         let html = self.generate_html(documentation)?;
-        Ok(format!("<!-- PDF generation not yet implemented. This is HTML content: -->\n{}", html))
+        Ok(format!(
+            "<!-- PDF generation not yet implemented. This is HTML content: -->\n{}",
+            html
+        ))
     }
 
     fn generate_word(&self, documentation: &Documentation) -> Result<String> {
         // For Word generation, we would typically use a library like docx-rs
         // For now, return Markdown with a note
         let markdown = self.generate_markdown(documentation)?;
-        Ok(format!("<!-- Word generation not yet implemented. This is Markdown content: -->\n{}", markdown))
+        Ok(format!(
+            "<!-- Word generation not yet implemented. This is Markdown content: -->\n{}",
+            markdown
+        ))
     }
 
     fn generate_system_html(&self, docs: &[Documentation]) -> Result<String> {
@@ -163,9 +172,11 @@ impl DocumentGenerator {
         let total_lines: usize = docs.iter().map(|d| d.program_summary.total_lines).sum();
         let total_data_items: usize = docs.iter().map(|d| d.data_structures.len()).sum();
         let total_business_rules: usize = docs.iter().map(|d| d.business_rules.len()).sum();
-        let avg_complexity: f64 = docs.iter()
+        let avg_complexity: f64 = docs
+            .iter()
             .map(|d| d.complexity_metrics.cyclomatic_complexity as f64)
-            .sum::<f64>() / docs.len() as f64;
+            .sum::<f64>()
+            / docs.len() as f64;
 
         serde_json::json!({
             "total_programs": total_programs,

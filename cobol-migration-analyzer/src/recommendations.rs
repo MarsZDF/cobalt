@@ -27,10 +27,9 @@ impl RecommendationEngine {
         let mut recommendations = Vec::new();
 
         // Architecture recommendations
-        recommendations.extend(self.generate_architecture_recommendations(
-            system_overview,
-            microservices_analysis,
-        )?);
+        recommendations.extend(
+            self.generate_architecture_recommendations(system_overview, microservices_analysis)?,
+        );
 
         // Cloud readiness recommendations
         recommendations.extend(self.generate_cloud_readiness_recommendations(cloud_readiness)?);
@@ -42,19 +41,17 @@ impl RecommendationEngine {
         recommendations.extend(self.generate_process_recommendations(effort_estimation)?);
 
         // Technology recommendations
-        recommendations.extend(self.generate_technology_recommendations(
-            system_overview,
-            microservices_analysis,
-        )?);
+        recommendations.extend(
+            self.generate_technology_recommendations(system_overview, microservices_analysis)?,
+        );
 
         // Security recommendations
         recommendations.extend(self.generate_security_recommendations(cloud_readiness)?);
 
         // Performance recommendations
-        recommendations.extend(self.generate_performance_recommendations(
-            system_overview,
-            microservices_analysis,
-        )?);
+        recommendations.extend(
+            self.generate_performance_recommendations(system_overview, microservices_analysis)?,
+        );
 
         // Sort by priority and impact
         recommendations.sort_by(|a, b| {
@@ -130,7 +127,11 @@ impl RecommendationEngine {
         }
 
         // Data architecture modernization
-        if system_overview.external_interfaces.iter().any(|i| matches!(i.interface_type, InterfaceType::FileSystem)) {
+        if system_overview
+            .external_interfaces
+            .iter()
+            .any(|i| matches!(i.interface_type, InterfaceType::FileSystem))
+        {
             recommendations.push(Recommendation {
                 id: Uuid::new_v4().to_string(),
                 title: "Modernize Data Architecture".to_string(),
@@ -150,7 +151,10 @@ impl RecommendationEngine {
         Ok(recommendations)
     }
 
-    fn generate_cloud_readiness_recommendations(&self, cloud_readiness: &CloudReadinessScore) -> Result<Vec<Recommendation>> {
+    fn generate_cloud_readiness_recommendations(
+        &self,
+        cloud_readiness: &CloudReadinessScore,
+    ) -> Result<Vec<Recommendation>> {
         let mut recommendations = Vec::new();
 
         // Address critical blockers
@@ -158,9 +162,13 @@ impl RecommendationEngine {
             if matches!(blocker.severity, Severity::Critical | Severity::High) {
                 recommendations.push(Recommendation {
                     id: Uuid::new_v4().to_string(),
-                    title: format!("Address Critical Blocker: {}", self.extract_blocker_title(&blocker.description)),
-                    description: format!("{} Recommended workarounds: {}", 
-                        blocker.description, 
+                    title: format!(
+                        "Address Critical Blocker: {}",
+                        self.extract_blocker_title(&blocker.description)
+                    ),
+                    description: format!(
+                        "{} Recommended workarounds: {}",
+                        blocker.description,
                         blocker.workarounds.join(", ")
                     ),
                     category: RecommendationCategory::Technology,
@@ -224,7 +232,10 @@ impl RecommendationEngine {
         Ok(recommendations)
     }
 
-    fn generate_risk_mitigation_recommendations(&self, risk_assessment: &RiskAssessment) -> Result<Vec<Recommendation>> {
+    fn generate_risk_mitigation_recommendations(
+        &self,
+        risk_assessment: &RiskAssessment,
+    ) -> Result<Vec<Recommendation>> {
         let mut recommendations = Vec::new();
 
         // Address high-risk technical issues
@@ -232,9 +243,13 @@ impl RecommendationEngine {
             if risk.risk_score > 7.0 {
                 recommendations.push(Recommendation {
                     id: Uuid::new_v4().to_string(),
-                    title: format!("Mitigate High Technical Risk: {}", self.extract_risk_title(&risk.description)),
-                    description: format!("{} Recommended actions: {}", 
-                        risk.description, 
+                    title: format!(
+                        "Mitigate High Technical Risk: {}",
+                        self.extract_risk_title(&risk.description)
+                    ),
+                    description: format!(
+                        "{} Recommended actions: {}",
+                        risk.description,
                         risk.mitigation_actions.join(", ")
                     ),
                     category: RecommendationCategory::Technology,
@@ -251,9 +266,13 @@ impl RecommendationEngine {
             if risk.risk_score > 7.0 {
                 recommendations.push(Recommendation {
                     id: Uuid::new_v4().to_string(),
-                    title: format!("Address Business Risk: {}", self.extract_risk_title(&risk.description)),
-                    description: format!("{} Recommended actions: {}", 
-                        risk.description, 
+                    title: format!(
+                        "Address Business Risk: {}",
+                        self.extract_risk_title(&risk.description)
+                    ),
+                    description: format!(
+                        "{} Recommended actions: {}",
+                        risk.description,
                         risk.mitigation_actions.join(", ")
                     ),
                     category: RecommendationCategory::Process,
@@ -266,7 +285,10 @@ impl RecommendationEngine {
         }
 
         // Overall risk management
-        if matches!(risk_assessment.overall_risk, RiskLevel::High | RiskLevel::Critical) {
+        if matches!(
+            risk_assessment.overall_risk,
+            RiskLevel::High | RiskLevel::Critical
+        ) {
             recommendations.push(Recommendation {
                 id: Uuid::new_v4().to_string(),
                 title: "Implement Comprehensive Risk Management".to_string(),
@@ -285,7 +307,10 @@ impl RecommendationEngine {
         Ok(recommendations)
     }
 
-    fn generate_process_recommendations(&self, effort_estimation: &EffortEstimation) -> Result<Vec<Recommendation>> {
+    fn generate_process_recommendations(
+        &self,
+        effort_estimation: &EffortEstimation,
+    ) -> Result<Vec<Recommendation>> {
         let mut recommendations = Vec::new();
 
         // Phased migration approach
@@ -378,7 +403,11 @@ impl RecommendationEngine {
         }
 
         // Data modernization technology
-        if system_overview.external_interfaces.iter().any(|i| matches!(i.interface_type, InterfaceType::FileSystem)) {
+        if system_overview
+            .external_interfaces
+            .iter()
+            .any(|i| matches!(i.interface_type, InterfaceType::FileSystem))
+        {
             recommendations.push(Recommendation {
                 id: Uuid::new_v4().to_string(),
                 title: "Select Modern Data Technologies".to_string(),
@@ -397,7 +426,10 @@ impl RecommendationEngine {
         Ok(recommendations)
     }
 
-    fn generate_security_recommendations(&self, cloud_readiness: &CloudReadinessScore) -> Result<Vec<Recommendation>> {
+    fn generate_security_recommendations(
+        &self,
+        cloud_readiness: &CloudReadinessScore,
+    ) -> Result<Vec<Recommendation>> {
         let mut recommendations = Vec::new();
 
         if cloud_readiness.categories.security < 80.0 {
@@ -502,11 +534,19 @@ impl RecommendationEngine {
     }
 
     fn extract_blocker_title(&self, description: &str) -> String {
-        description.split('.').next().unwrap_or(description).to_string()
+        description
+            .split('.')
+            .next()
+            .unwrap_or(description)
+            .to_string()
     }
 
     fn extract_risk_title(&self, description: &str) -> String {
-        description.split('.').next().unwrap_or(description).to_string()
+        description
+            .split('.')
+            .next()
+            .unwrap_or(description)
+            .to_string()
     }
 
     fn map_risk_to_effort(&self, impact: &Impact) -> EffortLevel {

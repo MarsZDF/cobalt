@@ -5,30 +5,22 @@ use std::fmt;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseError {
     /// Unexpected token encountered
-    UnexpectedToken {
-        expected: Vec<String>,
-        found: Token,
-    },
-    
+    UnexpectedToken { expected: Vec<String>, found: Token },
+
     /// End of input encountered unexpectedly
-    UnexpectedEof {
-        expected: Vec<String>,
-    },
-    
+    UnexpectedEof { expected: Vec<String> },
+
     /// Lexer error
     LexerError(LexError),
-    
+
     /// Invalid syntax
     InvalidSyntax {
         message: String,
         token: Option<Token>,
     },
-    
+
     /// Invalid level number
-    InvalidLevelNumber {
-        value: u8,
-        token: Token,
-    },
+    InvalidLevelNumber { value: u8, token: Token },
 }
 
 impl fmt::Display for ParseError {

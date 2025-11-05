@@ -128,7 +128,7 @@ impl CloudReadinessAnalyzer {
         let resource_intensity = self.analyze_resource_usage(programs);
         match resource_intensity {
             ResourceIntensity::Low => score += 10.0,
-            ResourceIntensity::Medium => {},
+            ResourceIntensity::Medium => {}
             ResourceIntensity::High => score -= 10.0,
             ResourceIntensity::VeryHigh => score -= 25.0,
         }
@@ -203,7 +203,8 @@ impl CloudReadinessAnalyzer {
 
         if self.has_complex_file_operations(programs) {
             blockers.push(CloudMigrationBlocker {
-                description: "Complex file system operations incompatible with cloud storage".to_string(),
+                description: "Complex file system operations incompatible with cloud storage"
+                    .to_string(),
                 severity: Severity::High,
                 resolution_effort: EffortLevel::High,
                 workarounds: vec![
@@ -215,7 +216,9 @@ impl CloudReadinessAnalyzer {
 
         if self.has_security_vulnerabilities(programs) {
             blockers.push(CloudMigrationBlocker {
-                description: "Security vulnerabilities that must be addressed before cloud deployment".to_string(),
+                description:
+                    "Security vulnerabilities that must be addressed before cloud deployment"
+                        .to_string(),
                 severity: Severity::High,
                 resolution_effort: EffortLevel::Medium,
                 workarounds: vec![
@@ -277,29 +280,75 @@ impl CloudReadinessAnalyzer {
     }
 
     // Helper methods (simplified implementations)
-    fn estimate_program_size(&self, _program: &Program) -> usize { 5000 }
-    fn analyze_coupling(&self, _programs: &[&Program]) -> f64 { 0.3 }
-    fn has_modular_structure(&self, _programs: &[&Program]) -> bool { true }
-    fn has_clear_interfaces(&self, _programs: &[&Program]) -> bool { false }
-    fn count_file_operations(&self, _programs: &[&Program]) -> usize { 5 }
-    fn has_database_operations(&self, _programs: &[&Program]) -> bool { false }
-    fn analyze_data_consistency_requirements(&self, _programs: &[&Program]) -> f64 { 2.0 }
-    fn has_hardcoded_credentials(&self, _programs: &[&Program]) -> bool { false }
-    fn has_comprehensive_error_handling(&self, _programs: &[&Program]) -> bool { true }
-    fn has_input_validation(&self, _programs: &[&Program]) -> bool { false }
-    fn has_audit_logging(&self, _programs: &[&Program]) -> bool { false }
-    fn is_mostly_stateless(&self, _programs: &[&Program]) -> bool { true }
-    fn analyze_resource_usage(&self, _programs: &[&Program]) -> ResourceIntensity { ResourceIntensity::Medium }
-    fn supports_concurrent_processing(&self, _programs: &[&Program]) -> bool { false }
-    fn assess_logging_quality(&self, _programs: &[&Program]) -> f64 { 0.3 }
-    fn has_health_checks(&self, _programs: &[&Program]) -> bool { false }
-    fn has_metrics_collection(&self, _programs: &[&Program]) -> bool { false }
-    fn assess_deployment_complexity(&self, _programs: &[&Program]) -> DeploymentComplexity { DeploymentComplexity::Moderate }
-    fn has_externalized_config(&self, _programs: &[&Program]) -> bool { false }
-    fn assess_dependency_complexity(&self, _programs: &[&Program]) -> f64 { 3.0 }
-    fn has_platform_specific_dependencies(&self, _programs: &[&Program]) -> bool { false }
-    fn has_complex_file_operations(&self, _programs: &[&Program]) -> bool { true }
-    fn has_security_vulnerabilities(&self, _programs: &[&Program]) -> bool { false }
+    fn estimate_program_size(&self, _program: &Program) -> usize {
+        5000
+    }
+    fn analyze_coupling(&self, _programs: &[&Program]) -> f64 {
+        0.3
+    }
+    fn has_modular_structure(&self, _programs: &[&Program]) -> bool {
+        true
+    }
+    fn has_clear_interfaces(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn count_file_operations(&self, _programs: &[&Program]) -> usize {
+        5
+    }
+    fn has_database_operations(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn analyze_data_consistency_requirements(&self, _programs: &[&Program]) -> f64 {
+        2.0
+    }
+    fn has_hardcoded_credentials(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn has_comprehensive_error_handling(&self, _programs: &[&Program]) -> bool {
+        true
+    }
+    fn has_input_validation(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn has_audit_logging(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn is_mostly_stateless(&self, _programs: &[&Program]) -> bool {
+        true
+    }
+    fn analyze_resource_usage(&self, _programs: &[&Program]) -> ResourceIntensity {
+        ResourceIntensity::Medium
+    }
+    fn supports_concurrent_processing(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn assess_logging_quality(&self, _programs: &[&Program]) -> f64 {
+        0.3
+    }
+    fn has_health_checks(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn has_metrics_collection(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn assess_deployment_complexity(&self, _programs: &[&Program]) -> DeploymentComplexity {
+        DeploymentComplexity::Moderate
+    }
+    fn has_externalized_config(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn assess_dependency_complexity(&self, _programs: &[&Program]) -> f64 {
+        3.0
+    }
+    fn has_platform_specific_dependencies(&self, _programs: &[&Program]) -> bool {
+        false
+    }
+    fn has_complex_file_operations(&self, _programs: &[&Program]) -> bool {
+        true
+    }
+    fn has_security_vulnerabilities(&self, _programs: &[&Program]) -> bool {
+        false
+    }
 }
 
 #[derive(Debug, Clone)]

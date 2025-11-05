@@ -11,19 +11,23 @@ pub struct TemplateEngine {
 impl TemplateEngine {
     pub fn new(template_dir: Option<String>) -> Self {
         let mut handlebars = Handlebars::new();
-        
+
         // Register built-in templates
         if let Err(e) = handlebars.register_template_string("program.html", PROGRAM_HTML_TEMPLATE) {
             eprintln!("Warning: Failed to register HTML template: {}", e);
         }
-        if let Err(e) = handlebars.register_template_string("program.md", PROGRAM_MARKDOWN_TEMPLATE) {
+        if let Err(e) = handlebars.register_template_string("program.md", PROGRAM_MARKDOWN_TEMPLATE)
+        {
             eprintln!("Warning: Failed to register Markdown template: {}", e);
         }
         if let Err(e) = handlebars.register_template_string("system.html", SYSTEM_HTML_TEMPLATE) {
             eprintln!("Warning: Failed to register system HTML template: {}", e);
         }
         if let Err(e) = handlebars.register_template_string("system.md", SYSTEM_MARKDOWN_TEMPLATE) {
-            eprintln!("Warning: Failed to register system Markdown template: {}", e);
+            eprintln!(
+                "Warning: Failed to register system Markdown template: {}",
+                e
+            );
         }
 
         // Register custom helpers
@@ -41,7 +45,10 @@ impl TemplateEngine {
         self.handlebars.render(template_name, context)
     }
 
-    pub fn load_custom_templates(&mut self, templates: HashMap<String, String>) -> Result<(), RenderError> {
+    pub fn load_custom_templates(
+        &mut self,
+        templates: HashMap<String, String>,
+    ) -> Result<(), RenderError> {
         for (name, content) in templates {
             self.handlebars.register_template_string(&name, &content)?;
         }
@@ -57,17 +64,15 @@ fn format_complexity_helper(
     _: &mut handlebars::RenderContext,
     out: &mut dyn handlebars::Output,
 ) -> handlebars::HelperResult {
-    let complexity = h.param(0)
-        .and_then(|v| v.value().as_u64())
-        .unwrap_or(0);
-    
+    let complexity = h.param(0).and_then(|v| v.value().as_u64()).unwrap_or(0);
+
     let level = match complexity {
         1..=5 => "Low",
         6..=10 => "Medium",
         11..=20 => "High",
         _ => "Very High",
     };
-    
+
     out.write(&format!("{} ({})", complexity, level))?;
     Ok(())
 }
@@ -79,10 +84,8 @@ fn format_percentage_helper(
     _: &mut handlebars::RenderContext,
     out: &mut dyn handlebars::Output,
 ) -> handlebars::HelperResult {
-    let value = h.param(0)
-        .and_then(|v| v.value().as_f64())
-        .unwrap_or(0.0);
-    
+    let value = h.param(0).and_then(|v| v.value().as_f64()).unwrap_or(0.0);
+
     out.write(&format!("{:.1}%", value * 100.0))?;
     Ok(())
 }
@@ -94,10 +97,8 @@ fn format_date_helper(
     _: &mut handlebars::RenderContext,
     out: &mut dyn handlebars::Output,
 ) -> handlebars::HelperResult {
-    let date_str = h.param(0)
-        .and_then(|v| v.value().as_str())
-        .unwrap_or("");
-    
+    let date_str = h.param(0).and_then(|v| v.value().as_str()).unwrap_or("");
+
     // Simple date formatting - in practice, you'd use chrono for proper parsing
     out.write(date_str)?;
     Ok(())
