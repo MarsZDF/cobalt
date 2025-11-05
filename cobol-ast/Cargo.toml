@@ -11,7 +11,7 @@ categories = ["parsing", "development-tools"]
 
 [dependencies]
 # Dependencies for serialization (optional, but useful)
-serde = { version = "1.0", features = ["derive"], optional = true }
+serde = { workspace = true, optional = true }
 
 [dev-dependencies]
 # For testing

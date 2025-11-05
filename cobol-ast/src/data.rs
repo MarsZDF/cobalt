@@ -2,7 +2,7 @@ use crate::span::{Span, Spanned};
 use crate::literal::Literal;
 
 /// Data division item.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct DataItem {
     pub level: u8,

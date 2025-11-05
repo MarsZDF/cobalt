@@ -3,7 +3,7 @@ use crate::data::DataItem;
 use crate::statement::Statement;
 
 /// Complete COBOL program.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct Program {
     pub identification: Spanned<IdentificationDivision>,
@@ -83,7 +83,7 @@ pub struct IoControl {
 }
 
 /// DATA DIVISION.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct DataDivision {
     pub file_section: Option<Spanned<FileSection>>,
@@ -93,14 +93,14 @@ pub struct DataDivision {
 }
 
 /// FILE SECTION.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct FileSection {
     pub file_descriptions: Vec<Spanned<FileDescription>>,
 }
 
 /// File description (FD).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct FileDescription {
     pub file_name: String,
@@ -110,28 +110,28 @@ pub struct FileDescription {
 }
 
 /// WORKING-STORAGE SECTION.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct WorkingStorageSection {
     pub data_items: Vec<Spanned<DataItem>>,
 }
 
 /// LOCAL-STORAGE SECTION.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct LocalStorageSection {
     pub data_items: Vec<Spanned<DataItem>>,
 }
 
 /// LINKAGE SECTION.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct LinkageSection {
     pub data_items: Vec<Spanned<DataItem>>,
 }
 
 /// PROCEDURE DIVISION.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProcedureDivision {
     pub using: Option<Vec<Spanned<String>>>, // USING clause (parameters)
@@ -142,7 +142,7 @@ pub struct ProcedureDivision {
 }
 
 /// Procedure section.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct Section {
     pub name: String,
@@ -150,7 +150,7 @@ pub struct Section {
 }
 
 /// Procedure paragraph.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct Paragraph {
     pub name: String,
