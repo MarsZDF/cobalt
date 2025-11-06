@@ -86,11 +86,11 @@ impl Linter {
 
         // Check data division
         if let Some(data) = &program.node.data {
-            self.check_data_division(data, filename);
+            self.check_data_division(&data.node, filename);
         }
 
         // Check procedure division
-        self.check_procedure_division(&program.node.procedure, filename);
+        self.check_procedure_division(&program.node.procedure.node, filename);
 
         self.issues.clone()
     }
@@ -148,7 +148,7 @@ impl Linter {
     }
 
     fn check_data_division(&mut self, data: &cobol_ast::DataDivision, filename: Option<&str>) {
-        if let Some(ws) = &data.node.working_storage_section {
+        if let Some(ws) = &data.working_storage_section {
             for item in &ws.node.data_items {
                 // Check for very long names (COBOL convention is typically 30 chars max)
                 if item.node.name.node.len() > 30 {
@@ -179,15 +179,14 @@ impl Linter {
         let mut nested_depth = 0;
         let mut max_nested_depth = 0;
 
-        for statement in &procedure.node.statements {
+        for statement in &procedure.statements {
             statement_count += 1;
 
             match &statement.node {
-                Statement::If {
-                    then_statements,
-                    else_statements,
-                    ..
-                } => {
+                Statement::If(if_stmt) => {
+                    let if_stmt = &if_stmt.node;
+                    let then_statements = &if_stmt.then_statements;
+                    let else_statements = &if_stmt.else_statements;
                     nested_depth += 1;
                     max_nested_depth = max_nested_depth.max(nested_depth);
 
@@ -223,7 +222,7 @@ impl Linter {
                 }
                 Statement::Stop { .. } => {
                     // Check if STOP RUN is at the end
-                    if statement_count < procedure.node.statements.len() {
+                    if statement_count < procedure.statements.len() {
                         self.add_issue(
                             LintIssue::warning(
                                 "stop-run-not-last",
@@ -250,8 +249,8 @@ impl Linter {
                         "Procedure Division has {} statements (consider splitting)",
                         statement_count
                     ),
-                    procedure.span.start_line,
-                    procedure.span.start_column,
+                    1, // Default line number
+                    1, // Default column number
                 )
                 .with_optional_file(filename),
             );
@@ -263,8 +262,8 @@ impl Linter {
                 LintIssue::warning(
                     "high-complexity",
                     &format!("High nesting depth detected (max: {})", max_nested_depth),
-                    procedure.span.start_line,
-                    procedure.span.start_column,
+                    1, // Default line number
+                    1, // Default column number
                 )
                 .with_optional_file(filename),
             );
@@ -336,7 +335,7 @@ fn main() -> Result<()> {
             Arg::new("input")
                 .help("Input COBOL file(s)")
                 .required(true)
-                .multiple_values(true),
+                .num_args(1..),
         )
         .arg(
             Arg::new("format")
@@ -354,7 +353,7 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
-    let files: Vec<&str> = matches.get_many("input").unwrap().collect();
+    let files: Vec<String> = matches.get_many::<String>("input").unwrap().cloned().collect();
     let format = matches.get_one::<String>("format").unwrap();
     let min_severity = matches.get_one::<String>("severity").unwrap();
 
@@ -375,7 +374,7 @@ fn main() -> Result<()> {
         match parse_source(&contents, Format::FreeFormat) {
             Ok(program) => {
                 let mut linter = Linter::new();
-                let issues = linter.lint(&program, Some(file));
+                let issues = linter.lint(&program, Some(&file));
                 all_issues.extend(issues);
             }
             Err(e) => {
@@ -445,10 +444,17 @@ fn print_text_output(issues: &[LintIssue]) {
             .map(|f| format!("{}:", f))
             .unwrap_or_default();
 
-        println!(
-            "{}:{}:{}:{} [{}] {}: {}",
-            file_str, issue.line, issue.column, severity_str, issue.rule, issue.message
-        );
+        if file_str.is_empty() {
+            println!(
+                "{}:{}:{} [{}] {}",
+                issue.line, issue.column, severity_str, issue.rule, issue.message
+            );
+        } else {
+            println!(
+                "{}:{}:{}:{} [{}] {}",
+                file_str.trim_end_matches(':'), issue.line, issue.column, severity_str, issue.rule, issue.message
+            );
+        }
     }
 
     let error_count = issues
