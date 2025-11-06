@@ -1,4 +1,4 @@
-use cobol_ast::{Program, Statement, Visitor};
+use cobol_ast::{Program, Statement};
 use cobol_lexer::Format;
 use cobol_parser::parse_source;
 use serde::{Deserialize, Serialize};
@@ -57,6 +57,9 @@ impl Linter {
         self.rules.push(Box::new(NamingConventionRule));
         self.rules.push(Box::new(ComplexityRule));
         self.rules.push(Box::new(UnusedVariableRule));
+        self.rules.push(Box::new(DeprecatedSyntaxRule));
+        self.rules.push(Box::new(Y2KDateRule));
+        self.rules.push(Box::new(Cobol2014ComplianceRule));
     }
 
     pub fn lint(&self, source: &str, format: Format) -> Result<Vec<LintIssue>, String> {
@@ -147,19 +150,17 @@ impl LintRule for NamingConventionRule {
         if let Some(data) = &program.data {
             if let Some(ws) = &data.node.working_storage_section {
                 for item in &ws.node.data_items {
-                    if let Some(name) = &item.node.name {
-                        let name_str = name.node.as_str();
-                        if name_str.len() > 30 {
-                            issues.push(LintIssue {
-                                severity: Severity::Warning,
-                                rule: self.name().to_string(),
-                                message: format!(
-                                    "Data item '{}' exceeds 30 characters (COBOL limit)",
-                                    name_str
-                                ),
-                                location: None,
-                            });
-                        }
+                    let name_str = item.node.name.node.as_str();
+                    if name_str.len() > 30 {
+                        issues.push(LintIssue {
+                            severity: Severity::Warning,
+                            rule: self.name().to_string(),
+                            message: format!(
+                                "Data item '{}' exceeds 30 characters (COBOL limit)",
+                                name_str
+                            ),
+                            location: None,
+                        });
                     }
                 }
             }
@@ -234,5 +235,143 @@ impl LintRule for UnusedVariableRule {
     fn check(&self, _program: &Program) -> Vec<LintIssue> {
         // This is a placeholder - real implementation would track variable usage
         Vec::new()
+    }
+}
+
+/// Checks for deprecated COBOL syntax.
+struct DeprecatedSyntaxRule;
+
+impl LintRule for DeprecatedSyntaxRule {
+    fn name(&self) -> &str {
+        "deprecated-syntax"
+    }
+
+    fn check(&self, program: &Program) -> Vec<LintIssue> {
+        let mut issues = Vec::new();
+
+        // Check for deprecated statements in PROCEDURE DIVISION
+        for stmt in &program.procedure.node.statements {
+            match &stmt.node {
+                Statement::GoTo { .. } => {
+                    issues.push(LintIssue {
+                        severity: Severity::Warning,
+                        rule: self.name().to_string(),
+                        message: "GO TO statement is deprecated. Use structured programming constructs instead (IF, PERFORM, EVALUATE)".to_string(),
+                        location: None,
+                    });
+                }
+                // ALTER statement would be checked here if we had it in the AST
+                _ => {}
+            }
+        }
+
+        issues
+    }
+}
+
+/// Checks for Y2K-style date issues.
+struct Y2KDateRule;
+
+impl LintRule for Y2KDateRule {
+    fn name(&self) -> &str {
+        "y2k-date-format"
+    }
+
+    fn check(&self, program: &Program) -> Vec<LintIssue> {
+        let mut issues = Vec::new();
+
+        // Check for 2-digit year patterns in data items
+        if let Some(data) = &program.data {
+            if let Some(ws) = &data.node.working_storage_section {
+                for item in &ws.node.data_items {
+                    // Check PICTURE clauses for date patterns
+                    if let Some(pic) = &item.node.picture {
+                        let pic_str = pic.node.string.to_uppercase();
+                        
+                        // Check for YYMMDD pattern (6 digits - 2-digit year)
+                        if pic_str.contains("9(6)") || pic_str == "999999" {
+                            let name_lower = item.node.name.node.to_lowercase();
+                            // Check if name suggests it's a date
+                            if name_lower.contains("date") || name_lower.contains("dt") {
+                                issues.push(LintIssue {
+                                    severity: Severity::Warning,
+                                    rule: self.name().to_string(),
+                                    message: format!(
+                                        "Data item '{}' uses 6-digit date format (YYMMDD) which may cause Y2K issues. Consider using 8-digit format (YYYYMMDD)",
+                                        item.node.name.node
+                                    ),
+                                    location: None,
+                                });
+                            }
+                        }
+                        
+                        // Check for YY pattern (2-digit year)
+                        if pic_str.contains("99") && pic_str.len() <= 4 {
+                            let name_lower = item.node.name.node.to_lowercase();
+                            if name_lower.contains("year") || name_lower.contains("yr") {
+                                issues.push(LintIssue {
+                                    severity: Severity::Warning,
+                                    rule: self.name().to_string(),
+                                    message: format!(
+                                        "Data item '{}' uses 2-digit year format which may cause Y2K issues. Consider using 4-digit year format",
+                                        item.node.name.node
+                                    ),
+                                    location: None,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        issues
+    }
+}
+
+/// Checks for COBOL 2014 compliance.
+struct Cobol2014ComplianceRule;
+
+impl LintRule for Cobol2014ComplianceRule {
+    fn name(&self) -> &str {
+        "cobol-2014-compliance"
+    }
+
+    fn check(&self, program: &Program) -> Vec<LintIssue> {
+        let mut issues = Vec::new();
+
+        // Check for features that may not be in COBOL 2014 standard
+        // This is a simplified check - a full implementation would need
+        // comprehensive knowledge of COBOL 2014 standard
+        
+        // Check for GO TO (deprecated in modern COBOL)
+        for stmt in &program.procedure.node.statements {
+            match &stmt.node {
+                Statement::GoTo { .. } => {
+                    issues.push(LintIssue {
+                        severity: Severity::Info,
+                        rule: self.name().to_string(),
+                        message: "GO TO statement may not be compliant with modern COBOL standards. Consider refactoring to structured programming".to_string(),
+                        location: None,
+                    });
+                }
+                _ => {}
+            }
+        }
+
+        // Check for ALTER statement (deprecated)
+        // This would require checking the AST for ALTER statements
+        
+        // Check for proper program structure
+        if program.identification.node.program_id.is_none() {
+            issues.push(LintIssue {
+                severity: Severity::Warning,
+                rule: self.name().to_string(),
+                message: "Program should have a PROGRAM-ID for COBOL 2014 compliance".to_string(),
+                location: Some("IDENTIFICATION DIVISION".to_string()),
+            });
+        }
+
+        issues
     }
 }
