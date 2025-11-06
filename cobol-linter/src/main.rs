@@ -367,14 +367,15 @@ fn main() -> Result<()> {
     let mut all_issues = Vec::new();
 
     for file in files {
-        let path = PathBuf::from(file);
+        let file_ref = &file;
+        let path = PathBuf::from(file_ref);
         let contents =
-            fs::read_to_string(&path).with_context(|| format!("Failed to read file: {}", file))?;
+            fs::read_to_string(&path).with_context(|| format!("Failed to read file: {}", file_ref))?;
 
         match parse_source(&contents, Format::FreeFormat) {
             Ok(program) => {
                 let mut linter = Linter::new();
-                let issues = linter.lint(&program, Some(&file));
+                let issues = linter.lint(&program, Some(file_ref));
                 all_issues.extend(issues);
             }
             Err(e) => {
