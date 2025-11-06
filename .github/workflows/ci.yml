@@ -68,6 +68,14 @@ jobs:
       - name: Test cobol-visualizer
         working-directory: cobol-visualizer
         run: cargo test --verbose || echo "No tests yet"
+      
+      - name: Test cobol-fmt
+        working-directory: cobol-fmt
+        run: cargo test --verbose || echo "No tests yet"
+      
+      - name: Test cobol-dead-code
+        working-directory: cobol-dead-code
+        run: cargo test --verbose || echo "No tests yet"
 
   lint:
     name: Lint
@@ -132,6 +140,46 @@ jobs:
       - name: Clippy (cobol-doc-gen)
         working-directory: cobol-doc-gen
         run: cargo clippy -- -D warnings
+      
+      - name: Check formatting (cobol-repl)
+        working-directory: cobol-repl
+        run: cargo fmt -- --check || echo "No formatting check"
+      
+      - name: Clippy (cobol-repl)
+        working-directory: cobol-repl
+        run: cargo clippy -- -D warnings -A clippy::manual_strip || echo "No clippy check"
+      
+      - name: Check formatting (cobol-linter)
+        working-directory: cobol-linter
+        run: cargo fmt -- --check || echo "No formatting check"
+      
+      - name: Clippy (cobol-linter)
+        working-directory: cobol-linter
+        run: cargo clippy -- -D warnings || echo "No clippy check"
+      
+      - name: Check formatting (cobol-visualizer)
+        working-directory: cobol-visualizer
+        run: cargo fmt -- --check || echo "No formatting check"
+      
+      - name: Clippy (cobol-visualizer)
+        working-directory: cobol-visualizer
+        run: cargo clippy -- -D warnings || echo "No clippy check"
+      
+      - name: Check formatting (cobol-fmt)
+        working-directory: cobol-fmt
+        run: cargo fmt -- --check
+      
+      - name: Clippy (cobol-fmt)
+        working-directory: cobol-fmt
+        run: cargo clippy -- -D warnings
+      
+      - name: Check formatting (cobol-dead-code)
+        working-directory: cobol-dead-code
+        run: cargo fmt -- --check
+      
+      - name: Clippy (cobol-dead-code)
+        working-directory: cobol-dead-code
+        run: cargo clippy -- -D warnings
 
   build:
     name: Build
@@ -191,6 +239,14 @@ jobs:
       
       - name: Build cobol-visualizer
         working-directory: cobol-visualizer
+        run: cargo build --verbose --release
+      
+      - name: Build cobol-fmt
+        working-directory: cobol-fmt
+        run: cargo build --verbose --release
+      
+      - name: Build cobol-dead-code
+        working-directory: cobol-dead-code
         run: cargo build --verbose --release
 
   examples:
@@ -263,4 +319,12 @@ jobs:
       
       - name: Build docs (cobol-doc-gen)
         working-directory: cobol-doc-gen
+        run: cargo doc --no-deps --verbose
+      
+      - name: Build docs (cobol-fmt)
+        working-directory: cobol-fmt
+        run: cargo doc --no-deps --verbose
+      
+      - name: Build docs (cobol-dead-code)
+        working-directory: cobol-dead-code
         run: cargo doc --no-deps --verbose

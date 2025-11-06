@@ -3,31 +3,31 @@
 pub struct FormatConfig {
     /// Number of spaces per indentation level (default: 4)
     pub indent_width: usize,
-    
+
     /// Use spaces instead of tabs (default: true)
     pub use_spaces: bool,
-    
+
     /// Keyword case convention: "upper", "lower", or "preserve" (default: "upper")
     pub keyword_case: KeywordCase,
-    
+
     /// Identifier case convention: "upper", "lower", or "preserve" (default: "preserve")
     pub identifier_case: IdentifierCase,
-    
+
     /// Spacing around operators (default: true)
     pub space_around_operators: bool,
-    
+
     /// Align data items by level number (default: true)
     pub align_data_items: bool,
-    
+
     /// Maximum line length before wrapping (default: 80 for fixed-format, 132 for free-format)
     pub max_line_length: usize,
-    
+
     /// Preserve existing line continuations (default: true)
     pub preserve_continuations: bool,
-    
+
     /// Format PICTURE clauses (default: true)
     pub format_picture: bool,
-    
+
     /// Indent PROCEDURE DIVISION statements (default: true)
     pub indent_procedure: bool,
 }
@@ -79,7 +79,7 @@ impl FormatConfig {
             indent_procedure: true,
         }
     }
-    
+
     /// Create a new config with modern COBOL style (lowercase keywords, 2-space indent).
     pub fn modern() -> Self {
         Self {
@@ -95,7 +95,7 @@ impl FormatConfig {
             indent_procedure: true,
         }
     }
-    
+
     /// Create a config for fixed-format COBOL (72-character line length).
     pub fn fixed_format() -> Self {
         Self {
@@ -104,4 +104,3 @@ impl FormatConfig {
         }
     }
 }
-

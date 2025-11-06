@@ -349,7 +349,7 @@ impl Parser {
             }
         }
 
-        let span = self.create_span(&level_token, &self.previous_token().unwrap_or(&level_token));
+        let span = self.create_span(&level_token, self.previous_token().unwrap_or(&level_token));
         Ok(Spanned::new(
             DataItem {
                 level,
@@ -744,7 +744,7 @@ impl Parser {
                         disposition: None,
                     }],
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -768,7 +768,7 @@ impl Parser {
                     invalid_key: None,
                     not_invalid_key: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -791,7 +791,7 @@ impl Parser {
                     invalid_key: None,
                     not_invalid_key: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -811,7 +811,7 @@ impl Parser {
                     invalid_key: None,
                     not_invalid_key: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -831,7 +831,7 @@ impl Parser {
                     invalid_key: None,
                     not_invalid_key: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -850,13 +850,13 @@ impl Parser {
                     sources: Vec::new(),
                     destination: Spanned::new(
                         Expression::Identifier("temp".to_string()),
-                        span.clone(),
+                        span,
                     ),
                     pointer: None,
                     on_overflow: None,
                     not_on_overflow: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -871,7 +871,7 @@ impl Parser {
         Ok(Spanned::new(
             Statement::Unstring(Spanned::new(
                 UnstringStatement {
-                    source: Spanned::new(Expression::Identifier("temp".to_string()), span.clone()),
+                    source: Spanned::new(Expression::Identifier("temp".to_string()), span),
                     delimiters: Vec::new(),
                     destinations: Vec::new(),
                     pointer: None,
@@ -879,7 +879,7 @@ impl Parser {
                     on_overflow: None,
                     not_on_overflow: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -899,7 +899,7 @@ impl Parser {
                     at_end: None,
                     when_clauses: Vec::new(),
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -921,7 +921,7 @@ impl Parser {
                     output_procedure: None,
                     giving_files: Vec::new(),
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -940,7 +940,7 @@ impl Parser {
                     when_clauses: Vec::new(),
                     when_other: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))
@@ -958,7 +958,7 @@ impl Parser {
                     paragraph,
                     through: None,
                 },
-                span.clone(),
+                span,
             ))),
             span,
         ))
@@ -977,7 +977,7 @@ impl Parser {
                     using: None,
                     returning: None,
                 },
-                span.clone(),
+                span,
             )),
             span,
         ))

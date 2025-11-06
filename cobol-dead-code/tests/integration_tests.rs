@@ -1,6 +1,6 @@
 use cobol_dead_code::analyze_program;
-use cobol_parser::parse_source;
 use cobol_lexer::Format;
+use cobol_parser::parse_source;
 
 #[test]
 fn test_unused_variable_detection() {
@@ -15,12 +15,15 @@ fn test_unused_variable_detection() {
            DISPLAY USED-VAR.
            STOP RUN.
 "#;
-    
+
     let program = parse_source(source, Format::FreeFormat).unwrap();
     let report = analyze_program(program.node);
-    
+
     // Should detect UNUSED-VAR as unused
-    assert!(report.unused_variables.iter().any(|v| v.name == "UNUSED-VAR"));
+    assert!(report
+        .unused_variables
+        .iter()
+        .any(|v| v.name == "UNUSED-VAR"));
 }
 
 #[test]
@@ -37,17 +40,17 @@ fn test_unused_paragraph_detection() {
        ANOTHER-UNUSED.
            DISPLAY "Also never called".
 "#;
-    
+
     let program = parse_source(source, Format::FreeFormat).unwrap();
     let proc = &program.node.procedure.node;
-    
+
     // Debug: print what we found
     eprintln!("Procedure division paragraphs: {:?}", proc.paragraphs.len());
     eprintln!("Procedure division statements: {:?}", proc.statements.len());
-    
+
     let report = analyze_program(program.node);
     eprintln!("Unused paragraphs: {:?}", report.unused_paragraphs);
-    
+
     // The parser might not parse paragraphs correctly yet
     // For now, just check that the analysis runs without panicking
     // TODO: Fix parser to properly handle paragraphs, then enable this assertion
@@ -67,11 +70,12 @@ fn test_used_paragraph_via_perform() {
        HELPER-PARAGRAPH.
            DISPLAY "Helper".
 "#;
-    
+
     let program = parse_source(source, Format::FreeFormat).unwrap();
     let report = analyze_program(program.node);
-    
-    // HELPER-PARAGRAPH should not be in unused list (it's called via PERFORM)
-    assert!(!report.unused_paragraphs.contains(&"HELPER-PARAGRAPH".to_string()));
-}
 
+    // HELPER-PARAGRAPH should not be in unused list (it's called via PERFORM)
+    assert!(!report
+        .unused_paragraphs
+        .contains(&"HELPER-PARAGRAPH".to_string()));
+}

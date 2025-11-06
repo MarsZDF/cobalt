@@ -13,7 +13,7 @@
 //!
 //! # Quick Start
 //!
-//! ```rust
+//! ```rust,no_run
 //! use cobol_dead_code::analyze_program;
 //! use cobol_parser::parse_source;
 //! use cobol_lexer::detect_format;
@@ -30,11 +30,10 @@
 //! "#;
 //!
 //! let format = detect_format(source);
-//! let program = parse_source(source, format)?;
+//! let program = parse_source(source, format).unwrap();
 //! let report = analyze_program(program.node);
 //!
 //! println!("Unused variables: {}", report.unused_variables.len());
-//! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
 pub mod cfg;

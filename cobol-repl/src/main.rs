@@ -25,7 +25,6 @@ fn main() -> Result<()> {
                 }
 
                 if line == "exit" || line == "quit" {
-                    println!("Goodbye!");
                     break;
                 }
 
@@ -34,12 +33,14 @@ fn main() -> Result<()> {
                     continue;
                 }
 
+                #[allow(clippy::manual_strip)]
                 if line.starts_with("parse ") {
                     let code = &line[6..];
                     handle_parse(&mut loaded_programs, code)?;
                     continue;
                 }
 
+                #[allow(clippy::manual_strip)]
                 if line.starts_with("load ") {
                     let filename = &line[5..];
                     handle_load(&mut loaded_programs, filename)?;
@@ -51,18 +52,21 @@ fn main() -> Result<()> {
                     continue;
                 }
 
+                #[allow(clippy::manual_strip)]
                 if line.starts_with("show ") {
                     let name = &line[5..];
                     handle_show(&loaded_programs, name)?;
                     continue;
                 }
 
+                #[allow(clippy::manual_strip)]
                 if line.starts_with("ast ") {
                     let name = &line[4..];
                     handle_ast(&loaded_programs, name)?;
                     continue;
                 }
 
+                #[allow(clippy::manual_strip)]
                 if line.starts_with("tokens ") {
                     let code = &line[7..];
                     handle_tokens(code)?;
@@ -75,8 +79,7 @@ fn main() -> Result<()> {
                     continue;
                 }
 
-                // Try to parse as COBOL code directly
-                handle_parse(&mut loaded_programs, line)?;
+                println!("Unknown command: {}. Type 'help' for available commands.", line);
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
@@ -98,97 +101,88 @@ fn main() -> Result<()> {
 
 fn print_help() {
     println!("\nCOBOL REPL Commands:");
-    println!("  help                  - Show this help message");
-    println!("  parse <code>          - Parse COBOL code");
-    println!("  load <file>           - Load COBOL program from file");
-    println!("  list                  - List all loaded programs");
-    println!("  show <name>           - Show program structure");
-    println!("  ast <name>            - Show AST for program");
-    println!("  tokens <code>         - Tokenize COBOL code");
-    println!("  clear                 - Clear all loaded programs");
-    println!("  exit / quit           - Exit REPL");
-    println!("\nYou can also type COBOL code directly to parse it.\n");
+    println!("  parse <code>     - Parse COBOL code and store it");
+    println!("  load <file>      - Load and parse a COBOL file");
+    println!("  list             - List all loaded programs");
+    println!("  show <name>      - Show information about a loaded program");
+    println!("  ast <name>       - Show AST of a loaded program");
+    println!("  tokens <code>    - Tokenize COBOL code");
+    println!("  clear            - Clear all loaded programs");
+    println!("  help             - Show this help message");
+    println!("  exit/quit        - Exit the REPL");
+    println!();
 }
 
-fn handle_parse(programs: &mut HashMap<String, Spanned<Program>>, code: &str) -> Result<()> {
-    match parse_source(code, Format::FreeFormat) {
-        Ok(program) => {
-            let program_id = program
-                .node
-                .identification
-                .node
-                .program_id
-                .clone()
-                .unwrap_or_else(|| "UNKNOWN".to_string());
+fn handle_parse(
+    loaded_programs: &mut HashMap<String, Spanned<Program>>,
+    code: &str,
+) -> Result<()> {
+    let format = cobol_lexer::detect_format(code);
+    let program = parse_source(code, format)
+        .with_context(|| "Failed to parse COBOL code")?;
 
-            programs.insert(program_id.clone(), program);
-            println!("✓ Parsed successfully! Program ID: {}", program_id);
-            println!(
-                "  Loaded as '{}' (use 'show {}' to inspect)",
-                program_id, program_id
-            );
-        }
-        Err(e) => {
-            eprintln!("✗ Parse error: {}", e);
-        }
-    }
+    let program_id = program
+        .node
+        .identification
+        .node
+        .program_id
+        .clone()
+        .unwrap_or_else(|| "UNNAMED".to_string());
+
+    loaded_programs.insert(program_id.clone(), program);
+    println!("✓ Parsed and stored program: {}", program_id);
     Ok(())
 }
 
-fn handle_load(programs: &mut HashMap<String, Spanned<Program>>, filename: &str) -> Result<()> {
-    let contents = std::fs::read_to_string(filename)
+fn handle_load(
+    loaded_programs: &mut HashMap<String, Spanned<Program>>,
+    filename: &str,
+) -> Result<()> {
+    use std::fs;
+
+    let contents = fs::read_to_string(filename)
         .with_context(|| format!("Failed to read file: {}", filename))?;
 
-    match parse_source(&contents, Format::FreeFormat) {
-        Ok(program) => {
-            let program_id = program
-                .node
-                .identification
-                .node
-                .program_id
-                .clone()
-                .unwrap_or_else(|| format!("file_{}", filename.replace('/', "_")));
+    let format = cobol_lexer::detect_format(&contents);
+    let program = parse_source(&contents, format)
+        .with_context(|| format!("Failed to parse file: {}", filename))?;
 
-            programs.insert(program_id.clone(), program);
-            println!("✓ Loaded program from '{}' as '{}'", filename, program_id);
-        }
-        Err(e) => {
-            eprintln!("✗ Failed to parse file: {}", e);
-        }
-    }
+    let program_id = program
+        .node
+        .identification
+        .node
+        .program_id
+        .clone()
+        .unwrap_or_else(|| "UNNAMED".to_string());
+
+    loaded_programs.insert(program_id.clone(), program);
+    println!("✓ Loaded and stored program: {} from {}", program_id, filename);
     Ok(())
 }
 
-fn handle_list(programs: &HashMap<String, Spanned<Program>>) {
-    if programs.is_empty() {
+fn handle_list(loaded_programs: &HashMap<String, Spanned<Program>>) {
+    if loaded_programs.is_empty() {
         println!("No programs loaded.");
         return;
     }
 
     println!("\nLoaded programs:");
-    for (name, program) in programs {
-        let stmt_count = program.node.procedure.node.statements.len();
-        let has_data = program.node.data.is_some();
-        let has_env = program.node.environment.is_some();
-
-        println!("  {} - {} statements", name, stmt_count);
-        if has_data {
-            println!("    - Has Data Division");
-        }
-        if has_env {
-            println!("    - Has Environment Division");
-        }
+    for (name, _) in loaded_programs {
+        println!("  - {}", name);
     }
     println!();
 }
 
-fn handle_show(programs: &HashMap<String, Spanned<Program>>, name: &str) -> Result<()> {
-    let program = programs
+fn handle_show(
+    loaded_programs: &HashMap<String, Spanned<Program>>,
+    name: &str,
+) -> Result<()> {
+    let program = loaded_programs
         .get(name)
-        .ok_or_else(|| anyhow::anyhow!("Program '{}' not found", name))?;
+        .ok_or_else(|| anyhow::anyhow!("Program not found: {}", name))?;
 
     println!("\nProgram: {}", name);
-    println!("  Identification Division:");
+    println!("  Identification Division: ✓");
     println!(
         "    Program ID: {:?}",
         program.node.identification.node.program_id
@@ -199,10 +193,10 @@ fn handle_show(programs: &HashMap<String, Spanned<Program>>, name: &str) -> Resu
         println!("  Environment Division: ✓");
         if let Some(config) = &env.node.configuration_section {
             println!("    Configuration Section: ✓");
-            if let Some(source) = &config.source_computer {
+            if let Some(source) = &config.node.source_computer {
                 println!("      Source Computer: {}", source);
             }
-            if let Some(object) = &config.object_computer {
+            if let Some(object) = &config.node.object_computer {
                 println!("      Object Computer: {}", object);
             }
         }
@@ -212,82 +206,71 @@ fn handle_show(programs: &HashMap<String, Spanned<Program>>, name: &str) -> Resu
         println!("  Data Division: ✓");
         if let Some(ws) = &data.node.working_storage_section {
             println!(
-                "    Working Storage Section: {} items",
+                "    Working Storage Section: {} data items",
                 ws.node.data_items.len()
             );
         }
         if let Some(ls) = &data.node.local_storage_section {
             println!(
-                "    Local Storage Section: {} items",
+                "    Local Storage Section: {} data items",
                 ls.node.data_items.len()
             );
         }
-        if let Some(linkage) = &data.node.linkage_section {
+        if let Some(link) = &data.node.linkage_section {
             println!(
-                "    Linkage Section: {} items",
-                linkage.node.data_items.len()
+                "    Linkage Section: {} data items",
+                link.node.data_items.len()
             );
         }
     }
 
-    println!("  Procedure Division:");
+    println!("  Procedure Division: ✓");
     println!(
         "    Statements: {}",
         program.node.procedure.node.statements.len()
     );
-
-    if !program.node.procedure.node.statements.is_empty() {
-        println!("\n    First few statements:");
-        for (i, stmt) in program
-            .node
-            .procedure
-            .node
-            .statements
-            .iter()
-            .take(5)
-            .enumerate()
-        {
-            println!("      {}. {:?}", i + 1, stmt.node);
-        }
-        if program.node.procedure.node.statements.len() > 5 {
-            println!(
-                "      ... ({} more)",
-                program.node.procedure.node.statements.len() - 5
-            );
-        }
-    }
-
+    println!(
+        "    Paragraphs: {}",
+        program.node.procedure.node.paragraphs.len()
+    );
+    println!(
+        "    Sections: {}",
+        program.node.procedure.node.sections.len()
+    );
     println!();
+
     Ok(())
 }
 
-fn handle_ast(programs: &HashMap<String, Spanned<Program>>, name: &str) -> Result<()> {
-    let program = programs
+fn handle_ast(
+    loaded_programs: &HashMap<String, Spanned<Program>>,
+    name: &str,
+) -> Result<()> {
+    let program = loaded_programs
         .get(name)
-        .ok_or_else(|| anyhow::anyhow!("Program '{}' not found", name))?;
+        .ok_or_else(|| anyhow::anyhow!("Program not found: {}", name))?;
 
-    println!("\nAST for program '{}':", name);
-    println!("{:#?}\n", program);
+    println!("\nAST for program: {}", name);
+    println!("{:#?}", program.node);
+    println!();
+
     Ok(())
 }
 
 fn handle_tokens(code: &str) -> Result<()> {
-    match tokenize(code, Format::FreeFormat) {
-        Ok(tokens) => {
-            println!("\nTokens ({} total):", tokens.len());
-            for (i, token) in tokens.iter().enumerate() {
-                if !token.is_trivial() {
-                    println!(
-                        "  {}: {:?} at line {}:{}",
-                        i, token.token_type, token.line, token.column
-                    );
-                }
-            }
-            println!();
-        }
-        Err(e) => {
-            eprintln!("✗ Tokenization error: {}", e);
+    let format = cobol_lexer::detect_format(code);
+    let tokens = tokenize(code, format)?;
+
+    println!("\nTokens:");
+    for token in tokens {
+        if !matches!(token.token_type, cobol_lexer::TokenType::Whitespace(_)) {
+            println!(
+                "  {:?} at line {}:{} - '{}'",
+                token.token_type, token.line, token.column, token.lexeme
+            );
         }
     }
+    println!();
+
     Ok(())
 }

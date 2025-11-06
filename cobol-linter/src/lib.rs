@@ -287,7 +287,7 @@ impl LintRule for Y2KDateRule {
                     // Check PICTURE clauses for date patterns
                     if let Some(pic) = &item.node.picture {
                         let pic_str = pic.node.string.to_uppercase();
-                        
+
                         // Check for YYMMDD pattern (6 digits - 2-digit year)
                         if pic_str.contains("9(6)") || pic_str == "999999" {
                             let name_lower = item.node.name.node.to_lowercase();
@@ -304,7 +304,7 @@ impl LintRule for Y2KDateRule {
                                 });
                             }
                         }
-                        
+
                         // Check for YY pattern (2-digit year)
                         if pic_str.contains("99") && pic_str.len() <= 4 {
                             let name_lower = item.node.name.node.to_lowercase();
@@ -343,7 +343,7 @@ impl LintRule for Cobol2014ComplianceRule {
         // Check for features that may not be in COBOL 2014 standard
         // This is a simplified check - a full implementation would need
         // comprehensive knowledge of COBOL 2014 standard
-        
+
         // Check for GO TO (deprecated in modern COBOL)
         for stmt in &program.procedure.node.statements {
             match &stmt.node {
@@ -361,7 +361,7 @@ impl LintRule for Cobol2014ComplianceRule {
 
         // Check for ALTER statement (deprecated)
         // This would require checking the AST for ALTER statements
-        
+
         // Check for proper program structure
         if program.identification.node.program_id.is_none() {
             issues.push(LintIssue {

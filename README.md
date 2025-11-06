@@ -114,6 +114,99 @@ cargo run --bin cobol-doc -- \
   --include-metrics
 ```
 
+### cobol-repl
+Interactive REPL (Read-Eval-Print Loop) for exploring COBOL code.
+
+**Features**:
+- ✅ Interactive COBOL code parsing and exploration
+- ✅ Load and parse COBOL files
+- ✅ Tokenize COBOL code
+- ✅ View AST structures
+- ✅ List and manage loaded programs
+- ✅ Command history support
+
+**Status**: ✅ Core functionality ready
+
+**Usage**:
+```bash
+cargo run --bin cobol-repl
+```
+
+### cobol-linter
+Static analysis tool for COBOL code quality and compliance.
+
+**Features**:
+- ✅ Naming convention checks
+- ✅ Deprecated syntax detection (GO TO statements)
+- ✅ Y2K-style date format warnings
+- ✅ COBOL 2014 compliance checks
+- ✅ Multiple output formats (text, JSON)
+- ✅ Severity-based filtering
+
+**Status**: ✅ Production ready
+
+**Usage**:
+```bash
+cargo run --bin cobol-linter -- program.cbl
+```
+
+### cobol-visualizer
+AST visualization tool for COBOL programs.
+
+**Features**:
+- ✅ Generate visual representations of COBOL AST
+- ✅ SVG output format
+- ✅ Program structure visualization
+- ✅ Division and section highlighting
+
+**Status**: ✅ Core functionality ready
+
+**Usage**:
+```bash
+cargo run --bin cobol-visualizer -- program.cbl output.svg
+```
+
+### cobol-fmt
+Auto-formatter for COBOL source code (like `rustfmt` or `black`).
+
+**Features**:
+- ✅ AST-based formatting for better code quality
+- ✅ Configurable indentation (spaces/tabs, width)
+- ✅ Keyword case normalization (UPPER, lower, preserve)
+- ✅ Identifier case normalization
+- ✅ PICTURE clause formatting
+- ✅ Data item alignment by level number
+- ✅ Spacing around operators
+- ✅ Line length enforcement
+- ✅ Comment preservation
+- ✅ Traditional and modern style presets
+
+**Status**: ✅ Core functionality ready
+
+**Usage**:
+```bash
+cargo run --bin cobol-fmt -- program.cbl
+```
+
+### cobol-dead-code
+Dead code detector for COBOL programs.
+
+**Features**:
+- ✅ Control Flow Graph (CFG) construction
+- ✅ Reachability analysis
+- ✅ Unused variable detection
+- ✅ Unused paragraph/section detection
+- ✅ Unreachable statement detection
+- ✅ JSON and text output formats
+- ✅ Filtering options (variables-only, procedures-only, unreachable-only)
+
+**Status**: ✅ Core functionality ready
+
+**Usage**:
+```bash
+cargo run --bin cobol-dead-code -- program.cbl
+```
+
 ## 🚀 Quick Start
 
 ### Installation
@@ -212,13 +305,20 @@ impl Visitor for MyVisitor {
 │                     │ (with visitor pattern ✅)
 └──────────┬──────────┘
            │
-           ├──────────────────┬──────────────────┐
-           │                  │                  │
-           v                  v                  v
-┌─────────────────┐ ┌──────────────────┐ ┌──────────────┐
-│ cobol-migration │ │   cobol-doc-gen  │ │  cobol-      │
-│   -analyzer ✅  │ │       ✅         │ │  formatter   │
-└─────────────────┘ └──────────────────┘ └──────────────┘
+           ├──────────┬──────────┬──────────┬──────────┬──────────┐
+           │          │          │          │          │          │
+           v          v          v          v          v          v
+┌──────────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+│ cobol-       │ │ cobol-   │ │ cobol-   │ │ cobol-   │ │ cobol-   │ │ cobol-   │
+│ migration-   │ │ doc-gen  │ │ repl     │ │ linter   │ │ visual-  │ │ fmt      │
+│ analyzer ✅  │ │ ✅       │ │ ✅       │ │ ✅       │ │ izer ✅  │ │ ✅       │
+└──────────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘
+           │
+           v
+┌──────────────┐
+│ cobol-       │
+│ dead-code ✅ │
+└──────────────┘
 ```
 
 ## 🧪 Development
@@ -313,7 +413,17 @@ cobalt/
 │   └── examples/
 ├── cobol-migration-analyzer/  # Migration tool
 │   └── src/
-└── cobol-doc-gen/          # Documentation generator
+├── cobol-doc-gen/          # Documentation generator
+│   └── src/
+├── cobol-repl/             # Interactive REPL
+│   └── src/
+├── cobol-linter/           # Static analysis linter
+│   └── src/
+├── cobol-visualizer/       # AST visualization
+│   └── src/
+├── cobol-fmt/              # Code formatter
+│   └── src/
+└── cobol-dead-code/        # Dead code detector
     └── src/
 ```
 
@@ -360,7 +470,12 @@ Contributions are welcome! This project follows standard Rust conventions:
 - [x] cobol-parser - Full COBOL grammar support (EVALUATE, PERFORM VARYING, file I/O, string operations, etc.)
 - [x] cobol-migration-analyzer - Production-ready migration assessment tool with real AST integration
 - [x] cobol-doc-gen - Complete documentation generator with complexity metrics and cross-references
-- [x] Security hardening - Fixed 47 unsafe operations across all crates
+- [x] cobol-repl - Interactive REPL for COBOL exploration
+- [x] cobol-linter - Static analysis tool with compliance checks
+- [x] cobol-visualizer - AST visualization tool
+- [x] cobol-fmt - Auto-formatter for COBOL source code
+- [x] cobol-dead-code - Dead code detector with CFG analysis
+- [x] Security hardening - Fixed unsafe operations across all crates
 - [x] Parser integration - Real COBOL parsing in all analysis tools
 - [x] Workspace setup and CI/CD
 
@@ -368,17 +483,13 @@ Contributions are welcome! This project follows standard Rust conventions:
 - [ ] Comprehensive testing framework with real COBOL programs
 - [ ] Performance benchmarking and optimization
 - [ ] Enhanced error messages and recovery strategies
+- [ ] Expand dead code detection (handle dynamic calls, ALTER statements)
 
 ### Planned 📋
-- [ ] cobol-formatter - Code formatter for COBOL
-- [ ] cobol-analyzer-* - Additional analysis modules
-  - [ ] Code quality metrics
-  - [ ] Dead code detection
-  - [ ] Security vulnerability scanner
-  - [ ] Complexity analyzer
+- [ ] Security and Compliance Scanner - OWASP-style security checks, PCI-DSS, GDPR compliance
+- [ ] Enhanced dead code detection - Better handling of dynamic PERFORM calls
 - [ ] Language server support (LSP)
 - [ ] Refactoring tools
-- [ ] REPL for COBOL exploration
 - [ ] COBOL to Rust transpiler (experimental)
 
 ## 🤝 Acknowledgments

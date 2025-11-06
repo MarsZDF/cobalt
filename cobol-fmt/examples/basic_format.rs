@@ -13,28 +13,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
            DISPLAY "Hello, World!".
            STOP RUN.
 "#;
-    
+
     println!("Original code:");
     println!("{}", source);
     println!("\n{}", "=".repeat(50));
     println!("\nFormatted with default config:\n");
-    
+
     let format = detect_format(source);
     let formatted = format_source(source, format, FormatConfig::default())?;
     println!("{}", formatted);
-    
+
     println!("\n{}", "=".repeat(50));
     println!("\nFormatted with traditional style:\n");
-    
+
     let formatted_traditional = format_source(source, format, FormatConfig::traditional())?;
     println!("{}", formatted_traditional);
-    
+
     println!("\n{}", "=".repeat(50));
     println!("\nFormatted with modern style:\n");
-    
+
     let formatted_modern = format_source(source, format, FormatConfig::modern())?;
     println!("{}", formatted_modern);
-    
+
     Ok(())
 }
-

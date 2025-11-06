@@ -353,7 +353,11 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
-    let files: Vec<String> = matches.get_many::<String>("input").unwrap().cloned().collect();
+    let files: Vec<String> = matches
+        .get_many::<String>("input")
+        .unwrap()
+        .cloned()
+        .collect();
     let format = matches.get_one::<String>("format").unwrap();
     let min_severity = matches.get_one::<String>("severity").unwrap();
 
@@ -369,8 +373,8 @@ fn main() -> Result<()> {
     for file in files {
         let file_ref = &file;
         let path = PathBuf::from(file_ref);
-        let contents =
-            fs::read_to_string(&path).with_context(|| format!("Failed to read file: {}", file_ref))?;
+        let contents = fs::read_to_string(&path)
+            .with_context(|| format!("Failed to read file: {}", file_ref))?;
 
         match parse_source(&contents, Format::FreeFormat) {
             Ok(program) => {
@@ -453,7 +457,12 @@ fn print_text_output(issues: &[LintIssue]) {
         } else {
             println!(
                 "{}:{}:{}:{} [{}] {}",
-                file_str.trim_end_matches(':'), issue.line, issue.column, severity_str, issue.rule, issue.message
+                file_str.trim_end_matches(':'),
+                issue.line,
+                issue.column,
+                severity_str,
+                issue.rule,
+                issue.message
             );
         }
     }
