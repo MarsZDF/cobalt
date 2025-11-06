@@ -51,9 +51,11 @@
 
 pub mod config;
 pub mod formatter;
+pub mod ast_formatter;
 
 pub use config::{FormatConfig, KeywordCase, IdentifierCase};
 pub use formatter::Formatter;
+pub use ast_formatter::AstFormatter;
 
 use cobol_lexer::{tokenize, Format};
 use cobol_parser::parse_source;
@@ -63,11 +65,16 @@ use anyhow::Result;
 pub fn format_source(source: &str, format: Format, config: FormatConfig) -> Result<String> {
     let tokens = tokenize(source, format)?;
     
-    // Try to parse for better indentation (optional, will fall back to heuristics if fails)
-    let ast = parse_source(source, format).ok();
+    // Try to parse for better formatting using AST
+    if let Ok(ast) = parse_source(source, format) {
+        // Use AST-based formatter for better quality
+        let ast_formatter = AstFormatter::new(config);
+        return Ok(ast_formatter.format_program(&ast));
+    }
     
+    // Fall back to token-based formatter if parsing fails
     let formatter = Formatter::new(config);
-    let formatted = formatter.format(&tokens, ast.as_ref());
+    let formatted = formatter.format(&tokens, None);
     
     Ok(formatted)
 }

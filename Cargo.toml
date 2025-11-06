@@ -5,7 +5,7 @@ members = [
     "cobol-parser",
     "cobol-doc-gen",
     "cobol-migration-analyzer", "cobol-repl", "cobol-linter", "cobol-visualizer",
-    "cobol-fmt",
+    "cobol-fmt", "cobol-dead-code",
 ]
 resolver = "2"
 
